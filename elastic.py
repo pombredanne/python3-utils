@@ -18,7 +18,8 @@ import elasticsearch
 from elasticsearch.helpers import scan
 
 # project modules
-from .common import hash_obj, len_utf8, encode_compact64
+from .hashing import hash_obj, encode_compact64
+from .stringutils import len_utf8
 
 
 class ElasticsearchClientError(RuntimeError):
@@ -42,6 +43,7 @@ class EsClient(elasticsearch.Elasticsearch):
         self._field_name = kwargs.pop('field_name', None)
         self._doc_type = kwargs.pop('doc_type', None)
         self._index_name = kwargs.pop('index_name', None)
+        self._analyzer_name = kwargs.pop('analyzer_name', None)
 
         super(EsClient, self).__init__(*args, **kwargs)
 
@@ -95,6 +97,19 @@ class EsClient(elasticsearch.Elasticsearch):
     @field_name.setter
     def field_name(self, value):
         self._field_name = field_name
+
+    @property
+    def analyzer_name(self):
+        if self._analyzer_name is None:
+            err = ('You request the default analyzer name, but none has been '
+                   'provided to this Elasticsearch client.')
+            raise ElasticsearchClientError(err)
+
+        return self._analyzer_name
+
+    @analyzer_name.setter
+    def analyzer_name(self, value):
+        self._analyzer_name = analyzer_name
 
     @property
     def doc_type(self):
@@ -230,7 +245,7 @@ def get_client(*config_paths, **config_kwargs):
         url_auth_sec = ''
 
     url_dest_sec = '{}:{}'.format(es_config.pop('host'), es_config.pop('port'))
-    full_es_url = '{}://{}{}'.format(protocol, url_auth_sec, url_dest_sec)
+    full_es_url = '{}://{}{}'.format(es_protocol, url_auth_sec, url_dest_sec)
 
     return EsClient(full_es_url, **es_config)
 

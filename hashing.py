@@ -2,6 +2,7 @@ import math
 import json
 import random
 import string
+import numbers
 import hashlib
 import collections
 
@@ -49,7 +50,7 @@ def randstr(n):
 
 def hash_obj(obj, ignore_unhashable=False):
     '''Returns hash for object obj'''
-    if isinstance(obj, Number):
+    if isinstance(obj, numbers.Number):
         obj = str(obj)
 
     if obj is None:

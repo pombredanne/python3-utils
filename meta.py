@@ -58,7 +58,6 @@ def timer(func, printer=None, comment=None):
     return wrapper
 
 
-
 def error_wrapper_pool(method):
     """Make sure that your multiprocessing pool workers report
     their full traceback when crashing."""
