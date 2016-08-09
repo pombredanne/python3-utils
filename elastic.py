@@ -20,6 +20,7 @@ from elasticsearch.helpers import scan
 # project modules
 from .hashing import hash_obj, encode_compact64
 from .stringutils import len_utf8
+from .core import is_list_or_tuple
 
 
 class ElasticsearchClientError(RuntimeError):
@@ -416,12 +417,14 @@ def multi_field_search(
 def simple_search(
         query_string, es_client, field_name=None, operator='or',
         retrieved_fields=None, maxsize=None, index_name=None,
-        analyzer_name=None):
+        analyzer_name=None, tie_breaker=0.0):
     """ Perform simple search
 
     Args:
         query_string (string): the query to submit to elasticseach
-        field_name (string): the field in which to search query_string
+        field_name (string or sequence): the field in which to search
+            query_string; if multiple fields are provided, they will get
+            combined into a boolean should query
         operator (string): operator to use in search (can be 'and' or 'or');
             by default, 'or' is used
         es_client (elasticsearch.client.Elasticsearch): elasticsearch client.
@@ -438,16 +441,19 @@ def simple_search(
     if field_name is None:
         field_name = es_client.field_name
 
-    query_dsl  = {
-        "query": {
-            "match": {
-                field_name: {
-                    "query": query_string,
-                    "operator": operator
-                }
+    if not is_list_or_tuple(field_name):
+        field_name = [field_name]
+
+    query_dsl = {
+        'query': {
+            'multi_match': {
+                'query': query_string,
+                'fields': field_name,
+                'operator': operator,
+                'tie_breaker': tie_breaker
             }
-        },
-        "fields": (retrieved_fields if retrieved_fields is not None else [])
+        }
+
     }
 
     if analyzer_name is not None:
@@ -512,7 +518,7 @@ def count(query, es_client, operator='or', field_name=None, index_name=None):
         field_name = es_client.field_name
 
     # if a single field is specified, we make a list out of it
-    if type(field_name) is not list:
+    if not is_list_or_tuple(field_name):
         field_name = [field_name]
 
     query_dsl = {
