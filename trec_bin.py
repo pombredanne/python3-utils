@@ -1,6 +1,7 @@
 # built-in modules
 import os
 import math
+import shlex
 from subprocess import Popen, PIPE
 from collections import OrderedDict
 from tempfile import NamedTemporaryFile
@@ -8,6 +9,8 @@ from tempfile import NamedTemporaryFile
 
 TREC_EVAL_PATH = 'bin/trec_eval'
 SAMPLE_EVAL_PATH = 'bin/sample_eval.pl'
+UBIRE_PATH = 'bin/ubire-v0.1.0.jar'
+
 
 def __guess_type(e):
     try:
@@ -98,6 +101,44 @@ def __call_sample_eval(
     return results
 
 
+def __call_ubire(
+        formatted_results, qrels_path, ubire_path,
+        qread_path, ubire_flags=None):
+
+    with NamedTemporaryFile(mode='w', delete=False) as tmpf:
+        tmpf.write('\n'.join(formatted_results))
+        results_path = tmpf.name
+
+    if ubire_flags is None:
+        ubire_flags = []
+    cmd = (
+        'java -jar {ubire} --qrels-file={qrels} --qread-file={qread} '
+        '--ranking-file={results} {flags}'.format(
+            ubire=ubire_path, qrels=qrels_path, qread=qread_path,
+            results=results_path, flags=' '.join(ubire_flags)))
+
+    try:
+        proc = Popen(shlex.split(cmd), stdout=PIPE, stderr=PIPE)
+        resp = proc.communicate()
+        msg_out, msg_err = (msg.decode('utf-8') for msg in resp)
+    except Exception:
+        raise
+    finally:
+        os.remove(results_path)
+
+    if msg_err:
+        raise IOError(msg_err)
+
+    results = {}
+    for ln in msg_out.split('\n'):
+        ln = ln.strip()
+        if not ln:
+            continue
+        metric, qid, value = ln.split()[:3]
+        results.setdefault(__guess_type(qid), OrderedDict()).setdefault(
+            metric.strip().lower(), __guess_type(value.strip()))
+    return results
+
 
 def __make_trec_eval_results(run_name, queries_ids, elasticsearch_results):
     lines = []
@@ -112,6 +153,22 @@ def __make_trec_eval_results(run_name, queries_ids, elasticsearch_results):
                 s=result['_score'], n=run_name))
 
     return lines
+
+
+def run_ubire(
+        run_name, queries_ids, elasticsearch_results,
+        qrels_path, qread_path, ubire_path=UBIRE_PATH, ubire_flags=None):
+
+    if ubire_flags is None:
+        ubire_flags = ['--readability', '--rbp-p=0.8']
+
+    formatted_results = __make_trec_eval_results(
+        run_name, queries_ids, elasticsearch_results)
+
+    output = __call_ubire(
+        formatted_results, qrels_path, ubire_path, qread_path, ubire_flags)
+
+    return output
 
 
 def run_trec_eval(
