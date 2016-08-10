@@ -8,7 +8,6 @@ import sys
 import time
 import json
 import gzip
-import codecs
 import warnings
 import collections
 from functools import wraps
@@ -557,8 +556,9 @@ def create_index(
     """
 
     if not isinstance(index_settings, dict):
+
         # load settings and mapping for Elasticsearch
-        with codecs.open(index_settings) as f:
+        with open(index_settings) as f:
             index_settings = json.load(f)
 
     if index_name is None:
