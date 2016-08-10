@@ -138,7 +138,7 @@ def simple_caching(
         local_callback_func_miss = (callback_func_miss or (lambda e: e))
         local_callback_func_hit = (callback_func_hit or (lambda e: e))
 
-        @fuctools.wraps(method)
+        @functools.wraps(method)
         def method_wrapper(*args, **kwargs):
 
             # looks for cachedir folder in self instance

@@ -39,9 +39,9 @@ def timer(func, printer=None, comment=None):
         printer = kwargs.pop('printer', local_printer)
         comment = kwargs.pop('comment', local_comment)
 
-        start = now()
+        start = time.time()
         resp = func(*args, **kwargs)
-        elapsed = now() - start
+        elapsed = time.time() - start
         if elapsed > 3600:
             timestr = ('{:02.0f}:{:02.0f}:{:05.2f}'.format(
                     elapsed // 3600, (elapsed % 3600) // 60, elapsed % 60))
