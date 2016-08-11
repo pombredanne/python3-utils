@@ -72,7 +72,7 @@ def _read_cache(extension, filepath):
 def simple_caching(
     cachedir=None, include_args=False, cache_comment=None,
     invalidate=False, cache_ext='json.gzip', callback_func_hit=None,
-    callback_func_miss=None, quiet=False):
+    callback_func_miss=None, quiet=False, no_caching=False):
     ''' Caching decorator
 
     Args:
@@ -132,6 +132,7 @@ def simple_caching(
         local_cache_ext = cache_ext
         local_include_args = include_args
         local_quiet = quiet
+        local_no_caching = no_caching
 
         # if not callback functions are specified, they are simply set to
         # the identity function
@@ -153,10 +154,12 @@ def simple_caching(
             # the original method and does nothing
             if not cachedir:
                 if not local_quiet:
-                    msg = ('Cache destination not provided; '
-                           'method "{}" will not be be cached'
-                           ''.format(method.__name__))
-                    warnings.warn(msg, RuntimeWarning)
+                    msg = (
+                        '[cache] destination not provided; '
+                        'method "{}" will not be be cached'
+                        ''.format(method.__name__)
+                    )
+                    print(msg, file=sys.stderr)
                 return method(*args, **kwargs)
 
             # checks if the global parameters are overwritten by
@@ -169,6 +172,10 @@ def simple_caching(
             callback_func_hit = kwargs.pop('callback_func_hit',
                                            local_callback_func_hit)
             cache_comment = kwargs.pop('cache_comment', local_cache_comment)
+            no_caching = kwargs.pop('no_caching', local_no_caching)
+
+            if no_caching:
+                return method(*args, **kwargs)
 
             # include underscore to separate cache_comment
             # from the rest of the filename if the cache comment
@@ -178,10 +185,11 @@ def simple_caching(
             )
 
             if not os.path.exists(cachedir):
-                warnings.warn(
-                    'cache folder "{}" does not exists; creating it'.format(
-                        cachedir),
-                    RuntimeWarning)
+                msg = (
+                    '[cache] folder "{}" does not exists; creating it'
+                    ''.format(cachedir)
+                )
+                print(msg, file=sys.stderr)
                 os.makedirs(cachedir)
 
             cache_ext = kwargs.pop('cache_ext', local_cache_ext)
@@ -207,7 +215,7 @@ def simple_caching(
                 loaded = callback_func_miss(resp)
 
                 if not local_quiet:
-                    msg = '[cache] generating {}'.format(cachepath),
+                    msg = '[cache] generating {}'.format(cachepath)
                     print(msg, file=sys.stderr)
 
                 _write_cache(resp, cache_ext, cachepath)
