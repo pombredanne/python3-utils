@@ -218,22 +218,17 @@ class EsClient(elasticsearch.Elasticsearch):
 
 
 def get_client(*config_paths, **config_kwargs):
-    """Get an index client
+    """Get an index client"""
 
-    Returns:
-        es_client (utils.elastic.EsClient): client for Elasticsearch
-            (inherits from elasticsearch.Elasticsearch; supports caching
-            and holds default index name, default document type, and
-            default search field)
-    """
-
-    # use config kwargs as config for elasticsearch
-    es_config = config_kwargs
+    es_config = {}
 
     # update es_config using all files in configuration_pats
     for fp in config_paths:
         with open(fp) as f:
             es_config.update(json.load(f))
+
+    # arguments passed as keyword have precedence
+    es_config.update(config_kwargs)
 
     es_user = es_config.pop('username', os.environ.get('ES_USER', None))
     es_passwd = es_config.pop('password', os.environ.get('ES_PASSWD', None))
