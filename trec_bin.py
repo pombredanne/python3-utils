@@ -134,7 +134,15 @@ def __call_ubire(
         ln = ln.strip()
         if not ln:
             continue
-        metric, qid, value = ln.split()[:3]
+        data = ln.split()
+
+        # the data on the line with the average metrics has 3 entries,
+        # the data on the per-query metric has four entries.
+        if len(data) == 3:
+            metric, qid, value = data
+        else:
+            metric, qid, _, value = data
+
         results.setdefault(__guess_type(qid), OrderedDict()).setdefault(
             metric.strip().lower(), __guess_type(value.strip()))
     return results
