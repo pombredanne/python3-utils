@@ -411,7 +411,7 @@ def multi_field_search(
 def simple_search(
         query_string, es_client, field_name=None, operator='or',
         retrieved_fields=None, maxsize=None, index_name=None,
-        analyzer_name=None, tie_breaker=0.0):
+        tie_breaker=0.0):
     """ Perform simple search
 
     Args:
@@ -449,9 +449,6 @@ def simple_search(
         }
 
     }
-
-    if analyzer_name is not None:
-        query_dsl['query']['match'][field_name]['analyzer'] = analyzer_name
 
     results = raw_search(
         query_dsl=query_dsl, es_client=es_client, maxsize=maxsize
