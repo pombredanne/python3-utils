@@ -20,7 +20,10 @@ def mkdir_p(path):
 
 def rm(path):
     try:
-        shutil.rmtree(path)
+        try:
+            shutil.rmtree(path)
+        except NotADirectoryError:
+            os.remove(path)
         return True
     except FileNotFoundError:
         return False
