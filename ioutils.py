@@ -1,5 +1,6 @@
 import os
 import sys
+import shutil
 import datetime
 import subprocess
 
@@ -14,11 +15,15 @@ def mkdir_p(path):
     """ from http://stackoverflow.com/questions/600268"""
     try:
         os.makedirs(path)
-    except OSError as exc:
-        if exc.errno == errno.EEXIST and os.path.isdir(path):
-            pass
-        else:
-            raise
+    except FileExistsError:
+        pass
+
+def rm(path):
+    try:
+        shutil.rmtree(path)
+        return True
+    except FileNotFoundError:
+        return False
 
 
 def process_call(cmd, shell=False, ignore_err=False):
