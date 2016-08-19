@@ -340,6 +340,56 @@ def phrase_search(
     return results
 
 
+def phrase_count(
+        query_string, es_client,
+        field_name=None, slop=0, in_order=True, index_name=None):
+    """ Perform phrase count
+
+    Args:
+        query_string (string): the query to submit to elasticseach
+        es_client (elasticsearch.client.Elasticsearch): elasticsearch client.
+        field_name (string): the field in which to search query_string
+        slop (int): maximum distance between non-consecutive terms in the
+            query; by default, no distance is allowed (all terms must be
+            consecutive)
+        in_order (bool): whether terms should appear in order
+        index_name (string): name of the index
+
+    Returns:
+        count (int): returns the number of terms matching the query
+
+    Raises:
+        ElasticsearchClientError: if no field name or index name
+            are available.
+    """
+    if field_name is None:
+        field_name = es_client.field_name
+
+    phrase_terms = tokenize(string=query_string, field_name=field_name,
+                            es_client=es_client, index_name=index_name)
+
+    if len(phrase_terms) < 2:
+        # surprise: this is not a phrase count!
+        return count(
+            ' '.join(phrase_terms),
+            es_client=es_client, field_name=field_name, index_name=index_name
+        )
+
+    query_dsl = {
+        "query": {
+            "span_near": {
+                "clauses": [{"span_term": {field_name: term}}
+                            for term in phrase_terms],
+                "slop": slop,  # max number of intervening unmatched pos.
+                "in_order": in_order,
+                "collect_payloads": False
+            }
+        }
+    }
+
+    return raw_count(query_dsl, es_client, index_name)
+
+
 def stats(es_client, index_name=None):
     """Returns count of documents and size in bytes on an index
     Args:
