@@ -39,3 +39,19 @@ class SimpleTokenizer(object):
             if len(tok) >= self.min_length and tok not in self.stopwords:
                 yield tok
 
+
+def string_similarity(x, y, similarity_name, n=3):
+    """Calculate approximate string similarity; for convinience reasons,
+    strings are split into n-grams"""
+    X, Y = set(make_ngrams(x, n)), set(make_ngrams(y, n))
+    if similarity_name == 'dice':
+        return 2 * len (X & Y) / (len(X) + len(Y))
+    elif similarity_name == 'jaccard':
+        return len(X & Y) / len(X | Y)
+    elif similarity_name == 'cosine':
+        return len(X & Y) / numpy.sqrt(len(X) * len(Y))
+    elif similarity_name == 'overlap':
+        return len(X & Y)
+    else:
+        msg = 'Similarity {} not recognized'.format(similarity_name)
+        raise TypeError(msg)
