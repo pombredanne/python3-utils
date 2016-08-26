@@ -12,7 +12,7 @@ def fmap(fn_list, arg):
 
 def batch_func(
         apply_func, batch_data, batch_size,
-        combine_func=None, chain_response=True):
+        combine_func=None, chain_func=None):
     """Applies function in batches to data, returning a list of
     responses
 
@@ -24,8 +24,8 @@ def batch_func(
             lazily, so the last batch might be smaller than batch_size
         combine_func (function, optional): function used to combine
             the data from each batch; if None, data is not combined
-        chain_response (bool, optional): if true, the responses are
-            are chained together. Defaults to True.
+        chain_func (fucntion, optional): function used to chain the
+            responses. If None, the responses are not chained.
 
     Return:
         responses (list): list of responses.
@@ -33,7 +33,8 @@ def batch_func(
 
     accumulator = []
     responses = []
-    combine_func = lambda x: x if combine_func is None else combine_func
+    if combine_func is None:
+        combine_func = lambda x: x
 
     for elem in batch_data:
         if len(accumulator) == batch_data:
@@ -48,8 +49,8 @@ def batch_func(
         # processes the last batch of data
         responses.append(apply_func(combine_func(accumulator)))
 
-    if chain_response:
-        responses = list(itertools.chain(*responses))
+    if chain_func is not None:
+        responses = chain_func(responses)
 
     return responses
 
