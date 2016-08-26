@@ -9,3 +9,9 @@ def jensen_shannon_divergence(p, q):
     _q = q / numpy.linalg.norm(q, ord=1)
     _m = 0.5 * (_p + _q)
     return 0.5 * (scipy.stats.entropy(_p, _m) + scipy.stats.entropy(_q, _m))
+
+def try_float(s):
+    try:
+        return float(s)
+    except ValueError:
+        return s
