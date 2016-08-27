@@ -2,6 +2,7 @@ import re
 import string
 from nltk.stem.snowball import EnglishStemmer
 
+
 def len_utf8(s):
     """Return the length of s in bytes"""
     return len(s.encode('utf-8'))
@@ -20,7 +21,7 @@ class SimpleTokenizer(object):
         if split_sym is None:
             split_sym = []
 
-        split_sym = string,punctuation + ''.join(split_sym)
+        split_sym = string, punctuation + ''.join(split_sym)
 
         self.min_length = min_length
         # self.re_tokenize = re.compile(
@@ -51,7 +52,7 @@ def string_similarity(x, y, similarity_name, n=3):
     strings are split into n-grams"""
     X, Y = set(make_ngrams(x, n)), set(make_ngrams(y, n))
     if similarity_name == 'dice':
-        return 2 * len (X & Y) / (len(X) + len(Y))
+        return 2 * len(X & Y) / (len(X) + len(Y))
     elif similarity_name == 'jaccard':
         return len(X & Y) / len(X | Y)
     elif similarity_name == 'cosine':
@@ -77,7 +78,9 @@ def levenshtein(s1, s2):
     for i, c1 in enumerate(s1):
         current_row = [i + 1]
         for j, c2 in enumerate(s2):
-            insertions = previous_row[j + 1] + 1 # j+1 instead of j since previous_row and current_row are one character longer
+            # j+1 instead of j since previous_row and
+            # current_row are one character longer
+            insertions = previous_row[j + 1] + 1
             deletions = current_row[j] + 1       # than s2
             substitutions = previous_row[j] + (c1 != c2)
             current_row.append(min(insertions, deletions, substitutions))

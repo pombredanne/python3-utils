@@ -10,6 +10,7 @@ import json
 # project modules
 # no modules
 
+
 def __load_from_lines(lines, **kwargs):
     cleaned_lines = []
 

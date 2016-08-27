@@ -39,7 +39,6 @@ def decode_compact64(value):
     return number
 
 
-
 def randstr(n):
     """generates a random string of length N
     from http://stackoverflow.com/a/23728630
@@ -47,6 +46,7 @@ def randstr(n):
     vals = string.ascii_uppercase + string.digits
     s = ''.join(random.SystemRandom().choice(vals) for _ in range(n))
     return s
+
 
 def hash_obj(obj, ignore_unhashable=False):
     '''Returns hash for object obj'''

@@ -1,6 +1,7 @@
 import numpy.linalg
 import scipy.stats
 
+
 def jensen_shannon_divergence(p, q):
     """Implementation of the [Jensen-Shannon divergence metric]
     (https://en.wikipedia.org/wiki/Jensen%E2%80%93Shannon_divergence)
@@ -9,6 +10,7 @@ def jensen_shannon_divergence(p, q):
     _q = q / numpy.linalg.norm(q, ord=1)
     _m = 0.5 * (_p + _q)
     return 0.5 * (scipy.stats.entropy(_p, _m) + scipy.stats.entropy(_q, _m))
+
 
 def try_float(s):
     try:

@@ -34,7 +34,7 @@ def batch_func(
     accumulator = []
     responses = []
     if combine_func is None:
-        combine_func = lambda x: x
+        def combine_func(x): x
 
     for elem in batch_data:
         if len(accumulator) == batch_data:
@@ -53,4 +53,3 @@ def batch_func(
         responses = chain_func(responses)
 
     return responses
-

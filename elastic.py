@@ -164,7 +164,7 @@ class EsClient(elasticsearch.Elasticsearch):
                     resp = json.loads(f.read().decode('utf-8'))
                     has_read = True
                 except json.JSONDecodeError:
-                    print (resp)
+                    print(resp, file=sys.stderr)
                     time.sleep(self.safesleep_timer)
         return resp
 
@@ -436,7 +436,7 @@ def multi_field_search(
     if search_fields_name is None:
         search_fields_name = [es_client.field_name]
 
-    query_dsl  = {
+    query_dsl = {
         "query": {
             "multi_match": {
                     "query": query_string,
@@ -627,9 +627,9 @@ def create_index(
 
 
 def retrieve_termvectors(
-    documents_ids, es_client, doc_type=None, index_name=None, fields=None,
-    term_offsets=False, term_positions=False, term_statistics=False,
-    field_statistics=False):
+        documents_ids, es_client, doc_type=None, index_name=None, fields=None,
+        term_offsets=False, term_positions=False, term_statistics=False,
+        field_statistics=False):
 
     if index_name is None:
         index_name = es_client.index_name
@@ -652,7 +652,7 @@ def retrieve_termvectors(
 
 
 def retrieve_documents(
-    documents_ids, es_client, index_name=None, doc_type=None, source=True):
+        documents_ids, es_client, index_name=None, doc_type=None, source=True):
     """Retrieves multiple documents in one hit
 
     Args:

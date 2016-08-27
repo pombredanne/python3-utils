@@ -70,9 +70,9 @@ def _read_cache(extension, filepath):
 
 
 def simple_caching(
-    cachedir=None, include_args=False, cache_comment=None,
-    invalidate=False, cache_ext='json.gzip', callback_func_hit=None,
-    callback_func_miss=None, quiet=False, no_caching=False):
+        cachedir=None, include_args=False, cache_comment=None,
+        invalidate=False, cache_ext='json.gzip', callback_func_hit=None,
+        callback_func_miss=None, quiet=False, no_caching=False):
     ''' Caching decorator
 
     Args:

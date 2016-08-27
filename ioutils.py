@@ -18,6 +18,7 @@ def mkdir_p(path):
     except FileExistsError:
         pass
 
+
 def rm(path):
     try:
         try:
