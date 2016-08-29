@@ -1,5 +1,6 @@
 import collections
 import random
+import itertools
 
 
 def interleave_lists(lst_a, lst_b, prob_a=None, seed=None):
@@ -112,5 +113,13 @@ def powerset(li, include_empty=False):
         yield tuple()
 
     for i in range(1, len(li) + 1):
-        for comb in combinations(li, i):
+        for comb in itertools.combinations(li, i):
             yield comb
+
+
+def flatten(li, n=1):
+    """Flattens a list n times"""
+    if n == 0:
+        return li
+    else:
+        return flatten(itertools.chain(*li), n=(n - 1))
