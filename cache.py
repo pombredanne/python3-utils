@@ -8,6 +8,7 @@ import json
 import pickle
 import string
 import codecs
+import inspect
 import hashlib
 import warnings
 import collections
@@ -139,6 +140,15 @@ def simple_caching(
         local_callback_func_miss = (callback_func_miss or (lambda e: e))
         local_callback_func_hit = (callback_func_hit or (lambda e: e))
 
+        # collect the deafault parameters for the method.
+        # if include_args is true, this values are used if kwargs
+        # are not provided
+        method_params = inspect.signature(method).parameters
+        default_params = {
+            k: v.default for k, v in method_params.items()
+            if v.default != inspect._empty
+        }
+
         @functools.wraps(method)
         def method_wrapper(*args, **kwargs):
 
@@ -196,7 +206,10 @@ def simple_caching(
 
             name = method.__name__.strip(string.punctuation)
             if include_args:
-                to_hash = hash_obj([args, kwargs])
+
+                # include default values to kwargs!
+                kwargs_with_default = {**default_params, **kwargs}
+                to_hash = hash_obj([args, kwargs_with_default])
                 args_comment = ('_0{}'.format(to_hash) if to_hash > 0
                                 else '_1{}'.format(to_hash * -1))
             else:
