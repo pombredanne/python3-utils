@@ -66,7 +66,11 @@ def hash_obj(obj, ignore_unhashable=False):
         for k in sorted(obj.keys()):
             outobj[k] = hash_obj(obj[k])
     elif type(obj) in (list, tuple, set):
-        outobj = [hash_obj(elem) for elem in obj]
+        try:
+            sorted_obj = sorted(obj)
+        except TypeError:
+            sorted_obj = obj
+        outobj = [hash_obj(elem) for elem in sorted_obj]
     elif ignore_unhashable:
         return 0
     else:
