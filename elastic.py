@@ -698,7 +698,10 @@ def index_in_bulk(
 
     Returns:
         cnt_total (integer): total number of indexed documents
+        skipped (list): list of documents that have been skipped
     """
+
+    skipped = []
 
     if not all_docs and bulk_size_in_bytes > 104857600:
         # this is the max size of transmission for a default
@@ -739,6 +742,10 @@ def index_in_bulk(
         size_new_op = len_utf8(json.dumps(new_op))
 
         if not all_docs and size_new_op > bulk_size_in_bytes:
+            skipped.extend(
+                [e['create']['_id'] for e in new_op if 'create' in e]
+            )
+
             msg = (
                 'WARNING: size of {} is {:,} bytes, maximum size is {:,}; '
                 'the document will be ignored.'.format(
@@ -785,7 +792,7 @@ def index_in_bulk(
         )
         print(msg)
 
-    return cnt_total
+    return cnt_total, skipped
 
 
 def get_scroll(query_dsl, es_client, index_name=None, keep_alive='1m'):
