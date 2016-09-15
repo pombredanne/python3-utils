@@ -1,6 +1,50 @@
+import sys
 import time
 import traceback
 from functools import wraps
+
+
+def ensure_version(major=None, minor=None, micro=None, releaselevel=None):
+    """Raise an error if the script is not running on the required version"""
+    def wrapper_decorator(method):
+        @wraps(method)
+        def wrapper(*args, **kwargs):
+            ok_version = (
+                (major is None or sys.version_info.major >= major) and
+                (minor is None or sys.version_info.minor >= minor) and
+                (micro is None or sys.version_info.micro >= micro) and
+                (
+                    releaselevel is None or
+                    sys.version_info.releaselevel == releaselevel
+                )
+            )
+            if ok_version:
+                return method(*args, **kwargs)
+
+            current_version = '{}.{}.{}-{}'.format(
+                sys.version_info.major,
+                sys.version_info.minor,
+                sys.version_info.micro,
+                sys.version_info.releaselevel
+            )
+            required_version = '{}.{}.{}-{}'.format(
+                major if major else 'x',
+                minor if minor else 'x',
+                micro if micro else 'x',
+                releaselevel if releaselevel else 'x'
+            )
+
+            msg = (
+                'This version of Python is not supported '
+                '(current: {}, required: {})'.format(
+                    current_version, required_version
+                )
+            )
+            print(msg)
+            exit(1)
+
+        return wrapper
+    return wrapper_decorator
 
 
 class StatusPrinter(object):
