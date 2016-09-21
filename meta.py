@@ -48,9 +48,13 @@ def ensure_version(major=None, minor=None, micro=None, releaselevel=None):
 
 
 class StatusPrinter(object):
-    def __init__(self, print_every=10000):
+    def __init__(self, print_every=10000, comment=None):
         self.print_every = print_every
         self.cnt = 0
+        self.message = (
+            '[status]'
+            ' {}: '.format(comment) if comment else ' ',
+            )
         self.start = time.time()
 
     def flush(self):
@@ -61,16 +65,22 @@ class StatusPrinter(object):
         self.cnt += 1
         if self.cnt % self.print_every == 0:
             delta = time.time() - self.start
-            print('[info] {:,} processed in {:.2f} s (avg {:.1e} s)'
+            print('[status] {:,} processed in {:.2f} s (avg {:.1e} s)'
                   ''.format(self.cnt, delta, delta / self.cnt))
 
-    def decorate(self, mthd):
-        @wraps(mthd)
+    def decorate_method(self, method):
+        @wraps(method)
         def wrapper(*args, **kwargs):
-            iterator = mthd(*args, **kwargs)
+            iterator = method(*args, **kwargs)
             for elem in iterator:
                 yield elem
                 self.increase()
+        return wrapper
+
+    def wrap_iterator(self, iterator):
+        for elem in iterator:
+            yield elem
+            self.increase()
 
 
 def timer(func, printer=None, comment=None):

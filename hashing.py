@@ -48,6 +48,11 @@ def randstr(n):
     return s
 
 
+def compact_hash_obj(obj, ignore_unhashable=False):
+    h = hash_obj(obj, ignore_unhashable)
+    return encode_compact64(h)
+
+
 def hash_obj(obj, ignore_unhashable=False):
     '''Returns hash for object obj'''
     if isinstance(obj, numbers.Number):

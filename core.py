@@ -3,6 +3,12 @@ import random
 import itertools
 
 
+def getset(s):
+    """Returns an element from a set"""
+    for x in s:
+        return x
+
+
 def interleave_lists(lst_a, lst_b, prob_a=None, seed=None):
     """Randomly interleaves two lists according to prob_a"""
     if prob_a is None:
