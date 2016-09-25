@@ -73,7 +73,8 @@ def _read_cache(extension, filepath):
 def simple_caching(
         cachedir=None, include_args=False, cache_comment=None,
         invalidate=False, cache_ext='json.gzip', callback_func_hit=None,
-        callback_func_miss=None, quiet=False, no_caching=False):
+        callback_func_miss=None, quiet=False, no_caching=False,
+        cache_name=None):
     ''' Caching decorator
 
     Args:
@@ -101,6 +102,9 @@ def simple_caching(
             cached element is not found
 
         quiet (bool, default=False): if true, no messages are printed
+
+        cache_name (string, default=None): name of cache file; if none,
+            the name of the function is used
 
     Notes:
         The kwargs can be set either (a) at decoration time
@@ -134,6 +138,7 @@ def simple_caching(
         local_include_args = include_args
         local_quiet = quiet
         local_no_caching = no_caching
+        local_cache_name = cache_name
 
         # if not callback functions are specified, they are simply set to
         # the identity function
@@ -158,7 +163,7 @@ def simple_caching(
             try:
                 cachedir = args[0].cachedir
             except (IndexError, AttributeError) as e:
-                    cachedir = kwargs.pop('cachedir', local_cachedir)
+                cachedir = kwargs.pop('cachedir', local_cachedir)
 
             # if no cachedir is specified, then it simply returns
             # the original method and does nothing
@@ -183,6 +188,7 @@ def simple_caching(
                                            local_callback_func_hit)
             cache_comment = kwargs.pop('cache_comment', local_cache_comment)
             no_caching = kwargs.pop('no_caching', local_no_caching)
+            cache_name = kwargs.pop('cache_name', local_cache_name)
 
             if no_caching:
                 return method(*args, **kwargs)
@@ -204,9 +210,12 @@ def simple_caching(
 
             cache_ext = kwargs.pop('cache_ext', local_cache_ext)
 
-            name = method.__name__.strip(string.punctuation)
-            if include_args:
+            name = (
+                method.__name__.strip(string.punctuation)
+                if cache_name is None else cache_name
+            )
 
+            if include_args:
                 # include default values to kwargs!
                 kwargs_with_default = {**default_params, **kwargs}
                 to_hash = hash_obj([args, kwargs_with_default])
