@@ -9,6 +9,7 @@ import time
 import json
 import gzip
 import warnings
+import itertools
 import collections
 from functools import wraps
 
@@ -20,6 +21,7 @@ from elasticsearch.helpers import scan
 from .hashing import hash_obj, encode_compact64
 from .stringutils import len_utf8
 from .core import is_list_or_tuple
+from .iterutils import batch_func
 
 
 class ElasticsearchClientError(RuntimeError):
@@ -805,3 +807,36 @@ def get_scroll(query_dsl, es_client, index_name=None, keep_alive='1m'):
         es_client, query=query_dsl, scroll=keep_alive, index=index_name)
 
     return scroll
+
+
+def mcount(terms, es_client, index_name=None, field_name=None, batch_size=50):
+    if index_name is None:
+        index_name = es_client.index_name
+    if field_name is None:
+        field_name = es_client.field_name
+
+    cnt_queries = [
+        ({'index': es_client.index_name},
+         {'size': 0, 'query': {'match': {field_name: term}}})
+        for term in terms
+    ]
+
+    cnt_queries = [
+        '\n'.join(json.dumps(op, sort_keys=True) for op in q)
+        for q in cnt_queries
+    ]
+
+    resp = batch_func(
+        apply_func=es_client.msearch,
+        combine_func=lambda x: '\n'.join(x),
+        batch_data=cnt_queries,
+        batch_size=batch_size,
+        chain_func=lambda rs: {
+            'responses': list(
+                itertools.chain(*(r['responses'] for r in rs))
+            )
+        }
+    )
+
+    terms_cnt = [r['hits']['total'] for r in resp['responses']]
+    return terms_cnt
