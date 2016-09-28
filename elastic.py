@@ -822,7 +822,7 @@ def mcount(
         (
             {'index': index_name},
             {
-                'size' : 0,
+                'size': 0,
                 'query': {
                     'match': {
                         field_name: {
