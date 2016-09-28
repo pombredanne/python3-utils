@@ -98,7 +98,7 @@ class EsClient(elasticsearch.Elasticsearch):
 
     @field_name.setter
     def field_name(self, value):
-        self._field_name = field_name
+        self._field_name = value
 
     @property
     def analyzer_name(self):
@@ -111,7 +111,7 @@ class EsClient(elasticsearch.Elasticsearch):
 
     @analyzer_name.setter
     def analyzer_name(self, value):
-        self._analyzer_name = analyzer_name
+        self._analyzer_name = value
 
     @property
     def doc_type(self):
@@ -124,7 +124,7 @@ class EsClient(elasticsearch.Elasticsearch):
 
     @doc_type.setter
     def doc_type(self, value):
-        self._doc_type = doc_type
+        self._doc_type = value
 
     @property
     def index_name(self):
@@ -137,7 +137,7 @@ class EsClient(elasticsearch.Elasticsearch):
 
     @index_name.setter
     def index_name(self, value):
-        self._index_name = index_name
+        self._index_name = value
 
     def _memcache_wrapper(self, method):
         @wraps(method)
@@ -809,15 +809,30 @@ def get_scroll(query_dsl, es_client, index_name=None, keep_alive='1m'):
     return scroll
 
 
-def mcount(terms, es_client, index_name=None, field_name=None, batch_size=50):
+def mcount(
+        terms, es_client, index_name=None, field_name=None, batch_size=50,
+        operator='and'
+    ):
     if index_name is None:
         index_name = es_client.index_name
     if field_name is None:
         field_name = es_client.field_name
 
     cnt_queries = [
-        ({'index': es_client.index_name},
-         {'size': 0, 'query': {'match': {field_name: term}}})
+        (
+            {'index': index_name},
+            {
+                'size' : 0,
+                'query': {
+                    'match': {
+                        field_name: {
+                            'query': term,
+                            'operator': operator
+                        }
+                    }
+                }
+            }
+         )
         for term in terms
     ]
 
