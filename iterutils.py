@@ -34,10 +34,11 @@ def batch_func(
     accumulator = []
     responses = []
     if combine_func is None:
-        def combine_func(x): x
+        def combine_func(x):
+            return x
 
     for elem in batch_data:
-        if len(accumulator) == batch_data:
+        if len(accumulator) == batch_size:
             responses.append(apply_func(combine_func(accumulator)))
 
             # flush the accumulator
