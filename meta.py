@@ -52,10 +52,8 @@ class StatusPrinter(object):
         self.print_every = print_every
         self.cnt = 0
         self.total_cnt = total_cnt
-        self.message = (
-            '[status]'
-            ' {}: '.format(comment) if comment else ' ',
-            )
+        self.message = ('[status]'
+                        ' {}:'.format(comment) if comment else ' ')
         self.start = time.time()
 
     def flush(self):
@@ -70,8 +68,8 @@ class StatusPrinter(object):
                 '{:.2%} ({:,})'.format(self.cnt / self.total_cnt, self.cnt)
                 if self.total_cnt else '{:,}'.format(self.cnt)
             )
-            print('[status] {} processed in {:.2f} s (avg {:.1e} s)'
-                  ''.format(status, delta, delta / self.cnt))
+            print('{} {} processed in {:.2f} s (avg {:.1e} s)'
+                  ''.format(self.message, status, delta, delta / self.cnt))
 
     def decorate_method(self, method):
         @wraps(method)
