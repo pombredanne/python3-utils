@@ -15,6 +15,7 @@ from functools import wraps
 
 # installed modules
 import elasticsearch
+import elasticsearch.exceptions
 from elasticsearch.helpers import scan
 
 # project modules
@@ -224,6 +225,14 @@ def get_client(*config_paths, **config_kwargs):
 
     es_config = {}
 
+    # check if a default configuration exists in the
+    # home folder of the user, use it in case it does.
+    default_config_path = os.path.join(
+        os.path.expanduser('~'), '.elasticsearch'
+    )
+    if not config_paths and os.path.exists(default_config_path):
+        config_paths = [default_config_path]
+
     # update es_config using all files in configuration_pats
     for fp in config_paths:
         with open(fp) as f:
@@ -322,20 +331,16 @@ def phrase_search(
     if len(phrase_terms) < 2:
         raise ValueError('Phrase has length 1; use simple search')
 
-    query_dsl = {
-        "query": {
-            "span_near": {
-                "clauses": [{"span_term": {field_name: term}}
-                            for term in phrase_terms],
-                "slop": slop,  # max number of intervening unmatched pos.
-                "in_order": in_order,
-                "collect_payloads": False
-            }
+    query_dsl = {"query": {
+        "span_near": {
+            "clauses"         : [{"span_term": {field_name: term}}
+                                 for term in phrase_terms],
+            "slop"            : slop,
+            "in_order"        : in_order,
+            "collect_payloads": False
         }
-    }
-
-    query_dsl['fields'] = (
-        retrieved_fields if retrieved_fields is not None else [])
+    }, 'fields'         : (
+        retrieved_fields if retrieved_fields is not None else [])}
 
     results = raw_search(query_dsl=query_dsl, es_client=es_client,
                          maxsize=maxsize, index_name=index_name)
@@ -632,6 +637,9 @@ def retrieve_termvectors(
         documents_ids, es_client, doc_type=None, index_name=None, fields=None,
         term_offsets=False, term_positions=False, term_statistics=False,
         field_statistics=False):
+
+    if len(documents_ids) == 0:
+        return []
 
     if index_name is None:
         index_name = es_client.index_name
