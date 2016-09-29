@@ -545,7 +545,7 @@ def count(query, es_client, operator='or', field_name=None, index_name=None):
     """ Count the matches of query in the index
 
     Args:
-        query (dict): the query in Query DSL language
+        query (str): search string
         es_client (elasticsearch.client.Elasticsearch): elasticsearch client.
         operator (string): operator to use in query. Can be "or" or "and".
         index_name (string): name of the index to use.
