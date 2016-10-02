@@ -22,11 +22,18 @@ def __guess_type(e):
     return e
 
 
-def __call_trec_eval(
-        formatted_results, qrels_path, trec_eval_path, trec_eval_flags=None):
-    with NamedTemporaryFile(mode='w', delete=False) as tmpf:
-        tmpf.write('\n'.join(formatted_results))
-        results_path = tmpf.name
+def call_trec_eval(
+        results, qrels_path, trec_eval_path, trec_eval_flags=None):
+
+    if type(results) == str and os.path.exists(results):
+        # the results are already a path to the result file
+        results_path = results
+        delete_result_path = False
+    else:
+        with NamedTemporaryFile(mode='w', delete=False) as tmpf:
+            tmpf.write('\n'.join(results))
+            results_path = tmpf.name
+        delete_result_path = True
 
     if trec_eval_flags is None:
         trec_eval_flags = []
@@ -41,7 +48,8 @@ def __call_trec_eval(
     except Exception:
         raise
     finally:
-        os.remove(results_path)
+        if delete_result_path:
+            os.remove(results_path)
 
     if len(msg_err) > 0:
         raise IOError(msg_err)
@@ -186,7 +194,7 @@ def run_trec_eval(
     formatted_results = __make_trec_eval_results(
         run_name, queries_ids, elasticsearch_results)
 
-    output = __call_trec_eval(
+    output = call_trec_eval(
         formatted_results, qrels_path, trec_eval_path, trec_eval_flags)
 
     return output
