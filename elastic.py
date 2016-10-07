@@ -678,6 +678,9 @@ def retrieve_documents(
             to True.
     """
 
+    if len(documents_ids) == 0:
+        return []
+
     if index_name is None:
         index_name = es_client.index_name
 
