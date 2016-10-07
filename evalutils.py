@@ -22,8 +22,8 @@ def __guess_type(e):
     return e
 
 
-def call_trec_eval(
-        results, qrels_path, trec_eval_path, trec_eval_flags=None):
+def call_trec_eval(results, qrels_path,
+                   trec_eval_path=TREC_EVAL_PATH, trec_eval_flags=None):
 
     if type(results) == str and os.path.exists(results):
         # the results are already a path to the result file
