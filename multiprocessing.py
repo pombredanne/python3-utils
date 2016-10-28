@@ -1,11 +1,7 @@
 """Functions to ease parallel processing of data"""
 
 # built-in modules
-import sys
 import copy
-import types
-import copyreg
-import traceback
 import functools
 import collections.abc
 
@@ -13,7 +9,7 @@ import collections.abc
 import multiprocess
 
 
-def _pool_map_more_than_one_arg(method):
+def pool_map_more_than_one_arg(method):
     """Use this decorator when using pool with a function that
     accepts more than one argument. Note that args_or_kwargs must
     consists of either an iterable or a mapping"""
@@ -57,7 +53,7 @@ def pool_map(
         except AttributeError:
             [args.extend(copy.deepcopy(constant_args)) for args in worker_args]
 
-    worker = _pool_map_more_than_one_arg(worker)
+    worker = pool_map_more_than_one_arg(worker)
 
     if single_thread:
         resp = map(worker, worker_args)
