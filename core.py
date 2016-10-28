@@ -1,6 +1,7 @@
 import collections
 import random
 import itertools
+import copy
 
 
 def getset(s):
@@ -43,7 +44,8 @@ def slice_list(lst, slice_size, func_while_slicing=None):
     If func_while_slicing is specified, then the function is
     applied to each example before slicing."""
     if func_while_slicing is None:
-        def func_while_slicing(member): return member
+        def func_while_slicing(member):
+            return member
 
     current_slice = []
 
