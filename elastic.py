@@ -241,6 +241,9 @@ def get_client(*config_paths, **config_kwargs):
     # arguments passed as keyword have precedence
     es_config.update(config_kwargs)
 
+    es_host = es_config.pop('host', os.environ.get('ES_HOST', None))
+    es_port = int(es_config.pop('port', os.environ.get('ES_PORT', None)))
+
     es_user = es_config.pop('username', os.environ.get('ES_USER', None))
     es_passwd = es_config.pop('password', os.environ.get('ES_PASSWD', None))
     es_protocol = es_config.pop('protocol', 'http')
@@ -250,7 +253,7 @@ def get_client(*config_paths, **config_kwargs):
     else:
         url_auth_sec = ''
 
-    url_dest_sec = '{}:{}'.format(es_config.pop('host'), es_config.pop('port'))
+    url_dest_sec = '{}:{}'.format(es_host, es_port)
     full_es_url = '{}://{}{}'.format(es_protocol, url_auth_sec, url_dest_sec)
 
     return EsClient(full_es_url, **es_config)
