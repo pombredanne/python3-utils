@@ -1,10 +1,15 @@
-import math
+# built in modules
 import json
 import random
 import string
 import numbers
 import hashlib
 import collections
+import argparse
+
+# project modules
+from .core import is_list_or_tuple
+
 
 SYMBOLS = '0123456789abcdefghujklmnopqrstuvwxyzABCDEFGHUJKLMNOPQRSTUVWXYZ_='
 NEG_SYMBOL = '-'
@@ -84,3 +89,27 @@ def hash_obj(obj, ignore_unhashable=False):
     json_dump = json.dumps(outobj, sort_keys=True).encode('utf-8')
     hash_value = int(hashlib.md5(json_dump).hexdigest(), 16)
     return hash_value
+
+
+class HashableNamespace(argparse.Namespace):
+    def __init__(self, *args, **kwargs):
+        hash_ignore = kwargs.pop('hash_ignore', [])
+        if not (
+                is_list_or_tuple(hash_ignore) or
+                isinstance(hash_ignore, collections.abc.Set)
+        ):
+            msg = '"hash_ignore" must be list, tuple, or set'
+            raise ValueError(msg)
+
+        if isinstance(args[0], argparse.Namespace):
+            self.__dict__.update(args[0].__dict__)
+        else:
+            super(HashableNamespace, self).__init__(*args, **kwargs)
+
+        self.hash_ignore = set(hash_ignore)
+
+    def __hash__(self):
+        return hash_obj([
+            (k, v) for k, v in sorted(self.__dict__.items())
+            if k not in self.hash_ignore and k != 'hash_ignore'
+        ])

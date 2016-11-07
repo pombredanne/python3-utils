@@ -2,6 +2,7 @@
 import os
 import math
 import shlex
+import json
 from subprocess import Popen, PIPE
 from collections import OrderedDict
 from tempfile import NamedTemporaryFile
@@ -212,3 +213,21 @@ def run_sample_eval(
         formatted_results, qrels_path, sample_eval_path, sample_eval_metrics)
 
     return output
+
+
+def print_performance(performance, per_query=False):
+    print(json.dumps(performance.pop('all'), indent=2, sort_keys=True))
+
+    if not per_query:
+        return
+
+    print('')
+
+    for query, results in performance.items():
+        print('{}: {}'.format(
+            str(query).rjust(2),
+            '  '.join(
+                '{}: {}'.format(k, str(v).ljust(6))
+                for k, v in sorted(results.items())
+            )
+        ))

@@ -1,6 +1,9 @@
+# built-in modules
 import re
 import string
-from nltk.stem.snowball import EnglishStemmer
+
+# installed modules
+import numpy
 
 
 def len_utf8(s):
@@ -21,7 +24,7 @@ class SimpleTokenizer(object):
         if split_sym is None:
             split_sym = []
 
-        split_sym = string, punctuation + ''.join(split_sym)
+        split_sym = string.punctuation + ''.join(split_sym)
 
         self.min_length = min_length
         # self.re_tokenize = re.compile(

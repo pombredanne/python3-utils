@@ -7,11 +7,7 @@ import gzip
 import json
 import pickle
 import string
-import codecs
 import inspect
-import hashlib
-import warnings
-import collections
 import functools
 
 # project modules
@@ -20,6 +16,7 @@ from .hashing import hash_obj
 
 class CacheError(RuntimeError):
     '''Error for caching function'''
+
     def __init__(self, *args, **kwargs):
         super(CacheError, self).__init__(*args, **kwargs)
 
