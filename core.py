@@ -74,11 +74,11 @@ class Bunch(dict):
         self.__dict__ = self
 
     def __copy__(self):
-        return self.__class__({k: v for k, v in self.__dict__.iteritems()})
+        return self.__class__({k: v for k, v in self.__dict__.items()})
 
     def __deepcopy__(self, memodict=None):
         return self.__class__({k: copy.deepcopy(v, memodict)
-                               for k, v in self.__dict__.iteritems()})
+                               for k, v in self.__dict__.items()})
 
 
 class RecBunch(Bunch):
@@ -86,7 +86,7 @@ class RecBunch(Bunch):
 
     def __init__(self, *args, **kwargs):
         super(RecBunch, self).__init__(*args, **kwargs)
-        for k, v in self.iteritems():
+        for k, v in self.items():
             try:
                 # uses self.__class__() instead of RecBunch()
                 # to make sure that, when inheriting from this,
@@ -95,6 +95,15 @@ class RecBunch(Bunch):
                 self[k] = self.__class__(v)
             except (ValueError, TypeError):
                 self[k] = v
+
+    def __getattr__(self, name):
+        if name not in self:
+            self[name] = RecBunch()
+
+        return self[name]
+
+    # def __setattr__(self, name, val):
+    #     print(name, val)
 
 
 def merge_dicts(a, b, path=None):
