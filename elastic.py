@@ -27,6 +27,7 @@ from .iterutils import batch_func
 
 class ElasticsearchClientError(RuntimeError):
     """Error raised by functions and methods in this module"""
+
     def __init__(self, *args, **kwargs):
         super(ElasticsearchClientError, self).__init__(*args, **kwargs)
 
@@ -336,13 +337,15 @@ def phrase_search(
 
     query_dsl = {"query": {
         "span_near": {
-            "clauses"         : [{"span_term": {field_name: term}}
-                                 for term in phrase_terms],
-            "slop"            : slop,
-            "in_order"        : in_order,
+            "clauses": [
+                {"span_term": {field_name: term}}
+                for term in phrase_terms
+            ],
+            "slop": slop,
+            "in_order": in_order,
             "collect_payloads": False
         }
-    }, 'fields'         : (
+    }, 'fields': (
         retrieved_fields if retrieved_fields is not None else [])}
 
     results = raw_search(query_dsl=query_dsl, es_client=es_client,
@@ -416,7 +419,7 @@ def stats(es_client, index_name=None):
 
     stats = {
         'count': resp['_all']['primaries']['docs']['count'],
-        'size':  resp['_all']['primaries']['store']['size_in_bytes']
+        'size': resp['_all']['primaries']['store']['size_in_bytes']
     }
 
     return stats
@@ -449,10 +452,10 @@ def multi_field_search(
     query_dsl = {
         "query": {
             "multi_match": {
-                    "query": query_string,
-                    "operator": operator,
-                    "fields": search_fields_name,
-                    "type": "most_fields"
+                "query": query_string,
+                "operator": operator,
+                "fields": search_fields_name,
+                "type": "most_fields"
             }
         },
         "fields": (
@@ -825,8 +828,7 @@ def get_scroll(query_dsl, es_client, index_name=None, keep_alive='1m'):
 
 def mcount(
         terms, es_client, index_name=None, field_name=None, batch_size=50,
-        operator='and'
-    ):
+        operator='and'):
     if index_name is None:
         index_name = es_client.index_name
     if field_name is None:
@@ -846,7 +848,7 @@ def mcount(
                     }
                 }
             }
-         )
+        )
         for term in terms
     ]
 
