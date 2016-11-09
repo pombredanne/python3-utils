@@ -100,11 +100,17 @@ def timer(func, printer=None, comment=None):
         resp = func(*args, **kwargs)
         elapsed = time.time() - start
         if elapsed > 3600:
-            timestr = ('{:02.0f}:{:02.0f}:{:05.2f}'.format(
-                    elapsed // 3600, (elapsed % 3600) // 60, elapsed % 60))
+            timestr = (
+                '{:02.0f}:{:02.0f}:{:05.2f}'.format(
+                    elapsed // 3600, (elapsed % 3600) // 60, elapsed % 60
+                )
+            )
         elif elapsed > 60:
-            timestr = ('{:02.0f}:{:05.2f}'.format(
-                    (elapsed % 3600) // 60, elapsed % 60))
+            timestr = (
+                '{:02.0f}:{:05.2f}'.format(
+                    (elapsed % 3600) // 60, elapsed % 60
+                )
+            )
         else:
             timestr = ('{:.3f} s'.format(elapsed))
 
