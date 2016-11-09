@@ -6,20 +6,29 @@ import string
 import numpy
 
 
+STOPWORDS = [
+    'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for',
+    'from', 'has', 'he', 'in', 'is', 'its', 'of', 'on', 'or',
+    'that', 'the', 'to', 'was ', 'were', 'will', 'with'
+]
+
+
 def len_utf8(s):
     """Return the length of s in bytes"""
     return len(s.encode('utf-8'))
 
 
 class SimpleTokenizer(object):
-    def __init__(self, stopwords=None, min_length=1, split_sym=None):
+    def __init__(
+            self, stopwords=None, min_length=1, split_sym=None, numbers=True):
         if not stopwords:
-            stopwords = [
-                'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for',
-                'from', 'has', 'he', 'in', 'is', 'its', 'of', 'on', 'or',
-                'that', 'the', 'to', 'was ', 'were', 'will', 'with'
-            ]
+            stopwords = STOPWORDS
         self.stopwords = set(stopwords)
+
+        if not numbers:
+            self.is_number = lambda s: re.match('\d+', s) is not None
+        else:
+            self.is_number = lambda s: False
 
         if split_sym is None:
             split_sym = []
@@ -31,6 +40,9 @@ class SimpleTokenizer(object):
         #     r'\s|' + r'|'.join(re.escape(p) for p in split_sym))
         self.re_tokenize = re.compile(r'&\w+;|\W+|_')
 
+    def __call__(self, text):
+        return self.tokenize(text)
+
     def tokenize(self, text):
         """Tokenize text
 
@@ -41,13 +53,17 @@ class SimpleTokenizer(object):
             tok (unicode): token
         """
         for tok in self.re_tokenize.split(text.lower()):
-            if len(tok) >= self.min_length and tok not in self.stopwords:
+            if (
+                len(tok) >= self.min_length and
+                tok not in self.stopwords and
+                not(self.is_number(tok))
+            ):
                 yield tok
 
 
 def make_ngrams(s, n):
-    s = u'{out}{s}{out}'.format(out='$'*(n-1), s=s)
-    return (s[i:i+n] for i in range(len(s) - n + 1))
+    s = u'{out}{s}{out}'.format(out='$' * (n - 1), s=s)
+    return (s[i:i + n] for i in range(len(s) - n + 1))
 
 
 def string_similarity(x, y, similarity_name, n=3):
