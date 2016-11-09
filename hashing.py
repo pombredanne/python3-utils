@@ -17,29 +17,30 @@ BASE = len(SYMBOLS)
 SYMBOLS_VALUE = {s: i for i, s in enumerate(SYMBOLS)}
 
 
-def encode_compact64(value):
+def encode_compact64(value, symbols=SYMBOLS, base=BASE, neg_symbol=NEG_SYMBOL):
     """Generate a compat base 64 encoding of value"""
     if value < 0:
-        return '{}{}'.format(NEG_SYMBOL, encode_compact64(-value))
+        return '{}{}'.format(neg_symbol, encode_compact64(-value))
 
     encoding = []
     while True:
-        value, remainder = divmod(value, BASE)
-        encoding.append(SYMBOLS[remainder])
+        value, remainder = divmod(value, base)
+        encoding.append(symbols[remainder])
         if value == 0:
             break
 
     return ''.join(reversed(encoding))
 
 
-def decode_compact64(value):
+def decode_compact64(
+        value, symbols_value=SYMBOLS_VALUE, base=BASE, neg_symbol=NEG_SYMBOL):
     """Return the value of a number ecoded using base 64"""
-    if value[0] == NEG_SYMBOL:
+    if value[0] == neg_symbol:
         return -decode_compact64(value[1:])
 
     number = 0
     for i, symbol in enumerate(reversed(value)):
-        number += SYMBOLS_VALUE[symbol] * (BASE ** i)
+        number += symbols_value[symbol] * (base ** i)
 
     return number
 
@@ -67,7 +68,7 @@ def hash_obj(obj, ignore_unhashable=False):
         obj = 'null'
 
     try:
-        return int(hashlib.md5(obj.encode('utf-8')).hexdigest(), 16)
+        return int(hashlib.md5(str(obj).encode('utf-8')).hexdigest(), 16)
     except (TypeError, AttributeError):
         pass
 
