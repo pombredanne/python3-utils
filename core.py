@@ -2,6 +2,11 @@ import collections
 import random
 import itertools
 import copy
+import platform
+
+
+def is_windows():
+    return any(platform.win32_ver())
 
 
 def getset(s):
