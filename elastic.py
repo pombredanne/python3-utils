@@ -816,7 +816,7 @@ def batch_count(
     return terms_cnt
 
 
-def batch_searh(
+def batch_search(
         queries, es_client, index_name=None, field_name=None, batch_size=50,
         operator='or', retrieved_fields=None, maxsize=None, tie_breaker=0.0):
     if index_name is None:
