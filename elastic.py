@@ -210,9 +210,9 @@ class EsClient(elasticsearch.Elasticsearch):
         self_repr = '<Elasticsearch([{}, {}])'.format(
             self.transport.hosts,
             {
-                'index_name': self.index_name,
-                'doc_type': self.doc_type,
-                'field_name': self.field_name
+                'index_name': self._index_name,
+                'doc_type': self._doc_type,
+                'field_name': self._field_name
             }
         )
         return self_repr
@@ -335,18 +335,22 @@ def phrase_search(
     if len(phrase_terms) < 2:
         raise ValueError('Phrase has length 1; use simple search')
 
-    query_dsl = {"query": {
-        "span_near": {
-            "clauses": [
-                {"span_term": {field_name: term}}
-                for term in phrase_terms
-            ],
-            "slop": slop,
-            "in_order": in_order,
-            "collect_payloads": False
+    query_dsl = {
+        "query": {
+            "span_near": {
+                "clauses": [
+                    {"span_term": {field_name: term}}
+                    for term in phrase_terms
+                ],
+                "slop": slop,
+                "in_order": in_order,
+                "collect_payloads": False
+            }
         }
-    }, 'fields': (
-        retrieved_fields if retrieved_fields is not None else [])}
+    }
+
+    if retrieved_fields is not None:
+        query_dsl['fields'] = retrieved_fields
 
     results = raw_search(query_dsl=query_dsl, es_client=es_client,
                          maxsize=maxsize, index_name=index_name)
@@ -425,52 +429,6 @@ def stats(es_client, index_name=None):
     return stats
 
 
-def multi_field_search(
-        query_string, es_client, search_fields_name=None, operator='or',
-        retrieved_fields_name=None, index_name=None, maxsize=1000):
-    """ Perform multi field search
-
-    Args:
-        query_string (string): the query to submit to elasticseach
-        field_name (string): the field in which to search query_string
-        operator (string): operator to use in search (can be 'and' or 'or');
-            by default, 'or' is used
-        es_client (elasticsearch.client.Elasticsearch): elasticsearch client.
-        retrieved_fields (list or None): optional list of fields to return.
-            If None, all fields are returned.
-        maxsize (int or None): maximum number of results to retrieve;
-            If None, 1000 is used.
-        index_name (string): name of the index
-
-    Returns:
-        results (list): a list of search results
-    """
-
-    if search_fields_name is None:
-        search_fields_name = [es_client.field_name]
-
-    query_dsl = {
-        "query": {
-            "multi_match": {
-                "query": query_string,
-                "operator": operator,
-                "fields": search_fields_name,
-                "type": "most_fields"
-            }
-        },
-        "fields": (
-            retrieved_fields_name
-            if retrieved_fields_name is not None else []
-        )
-    }
-
-    results = raw_search(
-        query_dsl=query_dsl, es_client=es_client, maxsize=maxsize
-    )
-
-    return results
-
-
 def simple_search(
         query_string, es_client, field_name=None, operator='or',
         retrieved_fields=None, maxsize=None, index_name=None,
@@ -509,9 +467,11 @@ def simple_search(
                 'operator': operator,
                 'tie_breaker': tie_breaker
             }
-        }
-
+        },
     }
+
+    if retrieved_fields is not None:
+        query_dsl['fields'] = retrieved_fields
 
     results = raw_search(
         query_dsl=query_dsl, es_client=es_client, maxsize=maxsize
@@ -826,7 +786,7 @@ def get_scroll(query_dsl, es_client, index_name=None, keep_alive='1m'):
     return scroll
 
 
-def mcount(
+def batch_count(
         terms, es_client, index_name=None, field_name=None, batch_size=50,
         operator='and'):
     if index_name is None:
@@ -834,33 +794,79 @@ def mcount(
     if field_name is None:
         field_name = es_client.field_name
 
-    cnt_queries = [
-        (
-            {'index': index_name},
-            {
-                'size': 0,
-                'query': {
-                    'match': {
-                        field_name: {
-                            'query': term,
-                            'operator': operator
-                        }
+    # create and format queries to work with the batch apis
+    queries_dsl = [
+        {
+            'size': 0,
+            'query': {
+                'match': {
+                    field_name: {
+                        'query': term,
+                        'operator': operator
                     }
                 }
             }
-        )
+        }
         for term in terms
     ]
 
-    cnt_queries = [
-        '\n'.join(json.dumps(op, sort_keys=True) for op in q)
-        for q in cnt_queries
+    resp = msearch(queries_dsl, es_client, index_name, batch_size)
+
+    terms_cnt = [r['hits']['total'] for r in resp['responses']]
+    return terms_cnt
+
+
+def batch_searh(
+        queries, es_client, index_name=None, field_name=None, batch_size=50,
+        operator='or', retrieved_fields=None, maxsize=None, tie_breaker=0.0):
+    if index_name is None:
+        index_name = es_client.index_name
+    if field_name is None:
+        field_name = es_client.field_name
+
+    if not is_list_or_tuple(field_name):
+        field_name = [field_name]
+
+    # create and format queries to work with the batch apis
+    # just like for simple_search, we use a multi match query
+    queries_dsl = [
+        {
+            'query': {
+                'multi_match': {
+                    'query': str(query),
+                    'operator': operator,
+                    'fields': field_name,
+                    'tie_breaker': tie_breaker
+                }
+            },
+            'fields': retrieved_fields if retrieved_fields else [],
+            'size': maxsize if maxsize else 1000
+        }
+        for query in queries
     ]
 
+    resp = msearch(queries_dsl, es_client, index_name, batch_size)
+
+    doc_matches = [r['hits']['hits'] for r in resp['responses']]
+    return doc_matches
+
+
+def msearch(queries_dsl, es_client, index_name=None, batch_size=50):
+    if index_name is None:
+        index_name = es_client.index_name
+
+    index_dsl = {'index': index_name}
+
+    formatted_queries_dsl = [
+        '{}\n{}'.format(json.dumps(index_dsl), json.dumps(query_dsl))
+        for query_dsl in queries_dsl
+    ]
+
+    # send queries in batches
     resp = batch_func(
         apply_func=es_client.msearch,
         combine_func=lambda x: '\n'.join(x),
-        batch_data=cnt_queries,
+        batch_data=formatted_queries_dsl,
         batch_size=batch_size,
         chain_func=lambda rs: {
             'responses': list(
@@ -869,5 +875,4 @@ def mcount(
         }
     )
 
-    terms_cnt = [r['hits']['total'] for r in resp['responses']]
-    return terms_cnt
+    return resp
