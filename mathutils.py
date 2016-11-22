@@ -1,5 +1,7 @@
-import numpy.linalg
+# installed libraries
+import numpy
 import scipy.stats
+from gensim.matutil import unitvec
 
 
 def jensen_shannon_divergence(p, q):
@@ -17,3 +19,8 @@ def try_float(s):
         return float(s)
     except ValueError:
         return s
+
+
+def vecsim(v1, v2):
+    """Calculate similarity between two vectors"""
+    return numpy.dot(unitvec(v1), unitvec(v2))
