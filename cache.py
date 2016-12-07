@@ -15,7 +15,7 @@ from .hashing import hash_obj
 
 
 class CacheError(RuntimeError):
-    '''Error for caching function'''
+    """Error for caching function"""
 
     def __init__(self, *args, **kwargs):
         super(CacheError, self).__init__(*args, **kwargs)
@@ -72,36 +72,30 @@ def simple_caching(
         invalidate=False, cache_ext='json.gzip', callback_func_hit=None,
         callback_func_miss=None, quiet=False, no_caching=False,
         cache_name=None):
-    ''' Caching decorator
+    """ Caching decorator
 
     Args:
         include_args (bool, default=False): determine whether
-        arguments passed to the function should be included as
-        cache comment
-
+            arguments passed to the function should be included as
+            cache comment
         cachedir (str, default=None): location of the folder where to cache.
             cachedir doesn't need to be configured if simple_caching is
             caching a method of a class with cachedir attribute.
-
         cache_comment (str, default=None): a comment to add to the name of
             the cache. If no comment is provided, the name of the cache
             is the name of the method that is being cached.
-
         invalidate (bool, default=False): re-builds cache if set to True
-
         cache_ext (str, default='json.gz', choices=['pickle', 'json',
             'json.gz', 'pickle.gz']): format and encoding of the cache
-
         callback_func_hit (function, default=None): function to call if
             cached element is found
-
         callback_func_miss (function, default=None): function to call if
             cached element is not found
-
         quiet (bool, default=False): if true, no messages are printed
-
         cache_name (string, default=None): name of cache file; if none,
             the name of the function is used
+        no_caching (bool, default=False): set it to true to prevent caching
+            (useful during debugging sessions)
 
     Notes:
         The kwargs can be set either (a) at decoration time
@@ -122,7 +116,7 @@ def simple_caching(
 
         A combination of both is also fine, of course.
         kwargs provided at call time have precedence, though.
-    '''
+    """
 
     def caching_decorator(method):
         # cachedir, cache_comment and autodetect are out
