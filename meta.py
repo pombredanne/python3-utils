@@ -86,8 +86,12 @@ class StatusPrinter(object):
             self.increase()
 
 
-def timer(func, printer=None, comment=None):
+def timer(func=None, printer=None, comment=None):
     """Times function func"""
+
+    if func is None:
+        return time.time()
+
     local_printer = printer if printer is not None else print
     local_comment = comment if comment is not None else func.__name__
 
