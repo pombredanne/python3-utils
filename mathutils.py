@@ -1,7 +1,7 @@
 # installed libraries
 import numpy
 import scipy.stats
-from gensim.matutil import unitvec
+from gensim.matutils import unitvec
 
 
 def jensen_shannon_divergence(p, q):
