@@ -86,14 +86,21 @@ class StatusPrinter(object):
             self.increase()
 
 
-def timer(func=None, printer=None, comment=None):
-    """Times function func"""
+def timer(func=None, printer=None, comment=None, inf_prec=False):
+    """Times function func. If function is None, it simply returns the
+    timer. If inf_prec is true, it uses power notation rather than
+    nice print"""
 
     if func is None:
         return time.time()
 
+    try:
+        func_name = '{}.{}'.format(func.__module__, func.__name__)
+    except AttributeError:
+        func_name = func.__name__
+
     local_printer = printer if printer is not None else print
-    local_comment = comment if comment is not None else func.__name__
+    local_comment = comment if comment is not None else func_name
 
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -103,7 +110,10 @@ def timer(func=None, printer=None, comment=None):
         start = time.time()
         resp = func(*args, **kwargs)
         elapsed = time.time() - start
-        if elapsed > 3600:
+
+        if inf_prec:
+            timestr = '{:.1e} s'.format(elapsed)
+        elif elapsed > 3600:
             timestr = (
                 '{:02.0f}:{:02.0f}:{:05.2f}'.format(
                     elapsed // 3600, (elapsed % 3600) // 60, elapsed % 60
