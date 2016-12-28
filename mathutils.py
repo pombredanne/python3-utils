@@ -24,3 +24,23 @@ def try_float(s):
 def vecsim(v1, v2):
     """Calculate similarity between two vectors"""
     return numpy.dot(unitvec(v1), unitvec(v2))
+
+
+def vstack(v1, v2):
+    if v1 is None:
+        return v2
+
+    if v2 is None:
+        return v1
+
+    return numpy.vstack((v1, v2))
+
+
+def hstack(v1, v2):
+    if v1 is None:
+        return v2
+
+    if v2 is None:
+        return v1
+
+    return numpy.hstack((v1, v2))
