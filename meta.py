@@ -86,6 +86,20 @@ class StatusPrinter(object):
             self.increase()
 
 
+def time_formatter(seconds):
+    if seconds > 3600:
+        return '{:02.0f}:{:02.0f}:{:05.2f}'.format(
+            seconds // 3600, (seconds % 3600) // 60, seconds % 60
+        )
+
+    elif seconds > 60:
+        return '{:02.0f}:{:05.2f}'.format(
+            (seconds % 3600) // 60, seconds % 60
+        )
+    else:
+        return '{:.3f} s'.format(seconds)
+
+
 def timer(func=None, printer=None, comment=None, inf_prec=False):
     """Times function func. If function is None, it simply returns the
     timer. If inf_prec is true, it uses power notation rather than
@@ -113,20 +127,8 @@ def timer(func=None, printer=None, comment=None, inf_prec=False):
 
         if inf_prec:
             timestr = '{:.1e} s'.format(elapsed)
-        elif elapsed > 3600:
-            timestr = (
-                '{:02.0f}:{:02.0f}:{:05.2f}'.format(
-                    elapsed // 3600, (elapsed % 3600) // 60, elapsed % 60
-                )
-            )
-        elif elapsed > 60:
-            timestr = (
-                '{:02.0f}:{:05.2f}'.format(
-                    (elapsed % 3600) // 60, elapsed % 60
-                )
-            )
         else:
-            timestr = ('{:.3f} s'.format(elapsed))
+            timestr = time_formatter(elapsed)
 
         printer('[timer] {} : {}'.format(comment, timestr))
 
