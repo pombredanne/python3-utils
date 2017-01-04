@@ -106,6 +106,9 @@ def get_context_average(x, window, axis=None, include_context=False):
     # length of the averaging axis
     l = x.shape[axis]
 
+    # we use this to norm the sum vector at the end
+    # final reshape is necessary to match dimension of the
+    # sum array (and input array x)
     norm_vec = numpy.concatenate((
         numpy.arange(window, n - 1),
         numpy.ones(l - n + 1) * (n - 1),
@@ -121,8 +124,9 @@ def get_context_average(x, window, axis=None, include_context=False):
     )
 
     back = flip(slice_on_axis(
-        numpy.cumsum(flip(slice_on_axis(x, axis, l - n + 1, l), axis=axis),
-                     axis=axis),
+        numpy.cumsum(
+            flip(slice_on_axis(x, axis, l - n + 1, l), axis=axis), axis=axis
+        ),
         axis=axis, start=window, end=n - 1
     ), axis=axis)
 
