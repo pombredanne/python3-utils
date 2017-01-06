@@ -9,14 +9,18 @@ from .meta import time_formatter, timer
 
 
 class NotSoChattyLogger(Callback):
-    def __init__(self, print_every=1000000, previous_losses=None):
+    def __init__(self, print_every=1000000, previous_losses=None, start=None):
         self._print_every = print_every
         self._partial_counter = 0
         self._total_counter = 0
         self.losses = previous_losses if previous_losses else []
-        self._start = timer()
+        self._start = start if start is not None else timer()
 
         super(NotSoChattyLogger, self).__init__()
+
+    @property
+    def start(self):
+        return self._start
 
     def on_batch_end(self, batch, logs={}):
         self._partial_counter += logs.get('size', 0)
