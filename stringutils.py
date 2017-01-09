@@ -33,7 +33,7 @@ class SimpleTokenizer(object):
         if split_sym is None:
             split_sym = []
 
-        split_sym = string.punctuation + ''.join(split_sym)
+        self.split_sym = string.punctuation + ''.join(split_sym)
 
         self.min_length = min_length
         # self.re_tokenize = re.compile(
