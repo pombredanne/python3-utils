@@ -23,6 +23,10 @@ class NotSoChattyLogger(Callback):
     def start(self):
         return self._start
 
+    @property
+    def count(self):
+        return self._total_counter
+
     def on_batch_end(self, batch, logs={}):
         self._partial_counter += logs.get('size', 0)
         self._total_counter += logs.get('size', 0)
