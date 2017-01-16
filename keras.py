@@ -56,7 +56,7 @@ class NotSoChattyLogger(Callback):
         self.losses.append(loss)
 
 
-def plot_weights(model, dest_dir, layers=None):
+def plot_weights(model, dest_dir, layers=None, dead_threshold=1e-8):
     for layer in model.layers:
         if layers is not None and layer not in layers:
             continue
@@ -66,6 +66,15 @@ def plot_weights(model, dest_dir, layers=None):
         except ValueError:
             # this is not a model with weights (e.g. noise layer)
             continue
+
+        dead_connections = sum(
+            1 if w < dead_threshold else 0 for w in numpy.nditer(W)
+        )
+        dead_connections_percent = dead_connections / numpy.prod(W.shape)
+
+        print('[analysis] layer {}: {:,} dead connections ({:.1%})'.format(
+            layer.name, dead_connections, dead_connections_percent
+        ))
 
         cmap_range = max(
             numpy.max(W), numpy.abs(numpy.min(W)),
@@ -79,13 +88,14 @@ def plot_weights(model, dest_dir, layers=None):
         fig.suptitle('Weights {}'.format(layer.name))
 
         ax1.imshow(
-            W, cmap='coolwarm', interpolation='none',
+            W, cmap='coolwarm', interpolation='nearest',
             vmin=-cmap_range, vmax=cmap_range
         )
         cax = ax2.imshow(
-            b, cmap='coolwarm', interpolation='none',
+            b, cmap='coolwarm', interpolation='nearest',
             vmin=-cmap_range, vmax=cmap_range
         )
+        ax2.set_xticklabels([])
 
         cbar = fig.colorbar(cax, ticks=[-cmap_range, 0, cmap_range])
         cbar.ax.set_yticklabels(
