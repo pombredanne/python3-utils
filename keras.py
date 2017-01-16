@@ -67,7 +67,7 @@ def plot_weights(model, dest_dir, layers=None):
             # this is not a model with weights (e.g. noise layer)
             continue
 
-        range = max(
+        cmap_range = max(
             numpy.max(W), numpy.abs(numpy.min(W)),
             numpy.max(b), numpy.abs(numpy.min(b)),
         )
@@ -78,11 +78,19 @@ def plot_weights(model, dest_dir, layers=None):
 
         fig.suptitle('Weights {}'.format(layer.name))
 
-        ax1.imshow(W, cmap='coolwarm', vmin=-range, vmax=range, interpolation='none')
-        cax = ax2.imshow(b, cmap='coolwarm', vmin=-range, vmax=range, interpolation='none')
+        ax1.imshow(
+            W, cmap='coolwarm', interpolation='none',
+            vmin=-cmap_range, vmax=cmap_range
+        )
+        cax = ax2.imshow(
+            b, cmap='coolwarm', interpolation='none',
+            vmin=-cmap_range, vmax=cmap_range
+        )
 
-        cbar = fig.colorbar(cax, ticks=[-range, 0, range])
-        cbar.ax.set_yticklabels(['{:.1e}'.format(-range), ' 0', '{:.1e}'.format(range)])
+        cbar = fig.colorbar(cax, ticks=[-cmap_range, 0, cmap_range])
+        cbar.ax.set_yticklabels(
+            ['{:.1e}'.format(-cmap_range), ' 0', '{:.1e}'.format(cmap_range)]
+        )
 
         output_fn = os.path.join(
             dest_dir, '{}-{}.pdf'.format(model.name, layer.name)
