@@ -16,13 +16,13 @@ from .meta import time_formatter, timer
 
 
 class NotSoChattyLogger(Callback):
-    def __init__(self, print_every=1000000, previous_losses=None,
-                 start=None, counter=None):
+    def __init__(self, print_every=1000000,
+                 start=None, counter=None, metrics=None):
         self._print_every = print_every
         self._partial_counter = 0
         self._total_counter = counter if counter is not None else 0
-        self.losses = previous_losses if previous_losses else []
         self._start = start if start is not None else timer()
+        self._metrics = ['loss'] if metrics is None else list(metrics)
 
         super(NotSoChattyLogger, self).__init__()
 
@@ -38,22 +38,20 @@ class NotSoChattyLogger(Callback):
         self._partial_counter += logs.get('size', 0)
         self._total_counter += logs.get('size', 0)
 
-        loss = float(logs.get('loss'))
-
         if self._partial_counter >= self._print_every:
-
             delta = timer() - self._start
+            metrics = ' - '.join(
+                '{}: {:.1e}'.format(m, float(logs.get(m)))
+                for m in self._metrics if m in logs
+            )
 
             print(
-                '[keras] {:,} trained in {} ({:.1e} s/example) '
-                '– loss: {:.1e}'.format(
+                '[keras] {:,} trained in {} ({:.1e} s/example) – {}'.format(
                     self._total_counter, time_formatter(delta),
-                    self._total_counter / delta, loss
+                    self._total_counter / delta, metrics
                 )
             )
             self._partial_counter = 0
-
-        self.losses.append(loss)
 
 
 def plot_weights(model, dest_dir, layers=None, dead_threshold=1e-8):
