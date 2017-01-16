@@ -26,6 +26,22 @@ def vecsim(v1, v2):
     return numpy.dot(unitvec(v1), unitvec(v2))
 
 
+def cosine_similarity(x, y):
+    if len(x.shape) == 1:
+        x = x.reshape(1, x.shape[0])
+        y = y.reshape(1, y.shape[0])
+
+    similarity = numpy.dot(x, y.T).diagonal()
+
+    norm_x = numpy.linalg.norm(x, axis=1, ord=2)
+    norm_y = numpy.linalg.norm(y, axis=1, ord=2)
+
+    norm_x[norm_x == 0] = 1
+    norm_y[norm_y == 0] = 1
+
+    return similarity / (norm_x * norm_y)
+
+
 def vstack(v1, v2):
     if v1 is None:
         return v2
