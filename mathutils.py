@@ -1,4 +1,7 @@
-# installed libraries
+# built in modules
+import heapq
+
+# installed modules
 import numpy
 import scipy.stats
 from gensim.matutils import unitvec
@@ -157,3 +160,60 @@ def get_context_average(x, window, axis=None, include_context=False):
         context_average = (context_sum - x) / norm_vec
 
     return context_average
+
+
+def argmin_n(m, n):
+    best_values = []
+    best_index = []
+    max_value_heap = []
+
+    for index, value in numpy.ndenumerate(m):
+
+        if len(best_values) == n:
+
+            if -1 * value < max_value_heap[0][0]:
+                # value is larger than the largest value
+                # and the list is at capacity
+                continue
+
+            _, pos = heapq.heappop(max_value_heap)
+            best_values[pos] = value
+            best_index[pos] = index
+            heapq.heappush(max_value_heap, (-1 * value, pos))
+        else:
+            heapq.heappush(max_value_heap, (-1 * value, len(best_values)))
+            best_values.append(value)
+            best_index.append(index)
+
+    pos, best_values = zip(*sorted(enumerate(best_values), key=lambda e: e[1]))
+    best_index = [best_index[i] for i in pos]
+    return best_index
+
+
+def argmax_n(m, n):
+    best_values = []
+    best_index = []
+    max_value_heap = []
+
+    for index, value in numpy.ndenumerate(m):
+
+        if len(best_values) == n:
+
+            if value < max_value_heap[0][0]:
+                # value is smaller than the largest value
+                # and the list is at capacity
+                continue
+
+            _, pos = heapq.heappop(max_value_heap)
+            best_values[pos] = value
+            best_index[pos] = index
+            heapq.heappush(max_value_heap, (value, pos))
+        else:
+            heapq.heappush(max_value_heap, (value, len(best_values)))
+            best_values.append(value)
+            best_index.append(index)
+
+    pos, best_values = zip(
+        *sorted(enumerate(best_values), key=lambda e: e[1], reverse=True))
+    best_index = [best_index[i] for i in pos]
+    return best_index
