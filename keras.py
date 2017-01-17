@@ -1,5 +1,6 @@
 # built-in modules
 import os
+from itertools import chain
 
 # installed modules
 import numpy
@@ -83,19 +84,35 @@ def plot_weights(model, dest_dir, layers=None, dead_threshold=1e-8):
 
         fig, (ax1, ax2) = plt.subplots(1, 2, sharey=False)
 
-        fig.suptitle('Weights {}'.format(layer.name))
+        fig.suptitle(
+            'Weights {}'.format(layer.name), fontsize=16, fontweight='bold'
+        )
 
-        ax1.imshow(
+        cax1 = ax1.imshow(
             W, cmap='coolwarm', interpolation='nearest',
-            vmin=-cmap_range, vmax=cmap_range
+            vmin=-cmap_range, vmax=cmap_range, origin='lower'
         )
-        cax = ax2.imshow(
-            b, cmap='coolwarm', interpolation='nearest',
-            vmin=-cmap_range, vmax=cmap_range
-        )
-        ax2.set_xticklabels([])
+        x, y = W.shape
+        ax1.set_ylim([0, x])
+        ax1.set_xlim([0, y])
+        ax1.set_title('Weights')
+        ax1.set_ylabel('input')
+        ax1.set_xlabel('output')
 
-        cbar = fig.colorbar(cax, ticks=[-cmap_range, 0, cmap_range])
+        for t in chain(ax1.xaxis.get_ticklines(), ax1.yaxis.get_ticklines()):
+            t.set_visible(False)
+
+        ax2.imshow(
+            b, cmap='coolwarm', interpolation='nearest',
+            vmin=-cmap_range, vmax=cmap_range, origin='lower'
+        )
+        ax2.set_title('Bias')
+        ax2.set_xticks([])
+        for t in chain(ax2.xaxis.get_ticklines(), ax2.yaxis.get_ticklines()):
+            t.set_visible(False)
+        ax2.set_ylabel('output')
+
+        cbar = fig.colorbar(cax1, ticks=[-cmap_range, 0, cmap_range])
         cbar.ax.set_yticklabels(
             ['{:.1e}'.format(-cmap_range), ' 0', '{:.1e}'.format(cmap_range)]
         )
