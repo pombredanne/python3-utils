@@ -18,16 +18,12 @@ from .meta import time_formatter, timer
 
 class NotSoChattyLogger(Callback):
     def __init__(self, print_every=1000000,
-                 start=None, counter=None, metrics=None,
-                 custom_metrics=None):
+                 start=None, counter=None, metrics=None):
         self._print_every = print_every
         self._partial_counter = 0
         self._total_counter = counter if counter is not None else 0
         self._start = start if start is not None else timer()
-        self._metrics = ['loss'] if metrics is None else list(metrics)
-        self._custom_metrics = {
-            m: [] for m in (custom_metrics if custom_metrics else {})
-        }
+        self._metrics = {m: [] for m in (metrics if metrics else {})}
 
         super(NotSoChattyLogger, self).__init__()
 
@@ -36,7 +32,7 @@ class NotSoChattyLogger(Callback):
         return self._start
 
     def __getitem__(self, item):
-        return self._custom_metrics[item]
+        return self._metrics[item]
 
     @property
     def count(self):
@@ -47,15 +43,19 @@ class NotSoChattyLogger(Callback):
         self._total_counter += logs.get('size', 0)
 
         if self._partial_counter >= self._print_every:
-            custom_logs = dict(logs)
-            custom_logs.update(
-                {k: v[-1] for k, v in self._custom_metrics.items() if v}
-            )
+            [
+                self._metrics[k].append(v)
+                for k, v in logs.items() if k in self._metrics
+            ]
+
+            current_logs = {
+                k: v[-1] for k, v in sorted(self._metrics.items()) if v
+            }
 
             delta = timer() - self._start
             metrics = ' - '.join(
-                '{}: {:.1e}'.format(m, float(custom_logs.get(m)))
-                for m in self._metrics if m in custom_logs
+                '{}: {:.1e}'.format(m, float(v))
+                for m, v in current_logs.items()
             )
 
             print(
