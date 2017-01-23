@@ -431,8 +431,7 @@ def stats(es_client, index_name=None):
 
 def simple_search(
         query_string, es_client, field_name=None, operator='or',
-        retrieved_fields=None, maxsize=None, index_name=None,
-        tie_breaker=0.0):
+        retrieved_fields=None, maxsize=None, index_name=None):
     """ Perform simple search
 
     Args:
@@ -461,11 +460,10 @@ def simple_search(
 
     query_dsl = {
         'query': {
-            'multi_match': {
+            'query_string': {
                 'query': query_string,
                 'fields': field_name,
-                'operator': operator,
-                'tie_breaker': tie_breaker
+                'default_operator': operator
             }
         },
     }
@@ -818,7 +816,7 @@ def batch_count(
 
 def batch_search(
         queries, es_client, index_name=None, field_name=None, batch_size=50,
-        operator='or', retrieved_fields=None, maxsize=None, tie_breaker=0.0):
+        operator='or', retrieved_fields=None, maxsize=None):
     if index_name is None:
         index_name = es_client.index_name
     if field_name is None:
@@ -832,11 +830,10 @@ def batch_search(
     queries_dsl = [
         {
             'query': {
-                'multi_match': {
+                'query_string': {
                     'query': str(query),
-                    'operator': operator,
-                    'fields': field_name,
-                    'tie_breaker': tie_breaker
+                    'default_operator': operator,
+                    'fields': field_name
                 }
             },
             'fields': retrieved_fields if retrieved_fields else [],
