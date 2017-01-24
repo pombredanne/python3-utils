@@ -92,6 +92,13 @@ def hash_obj(obj, ignore_unhashable=False):
     return hash_value
 
 
+def numpy_hash(arr):
+    """Return the hash of a numpy array
+    from: http://stackoverflow.com/questions/16589791/most-efficient-property-to-hash-for-numpy-array#comment41442605_16592241
+    """
+    return hash(arr.data.tobytes())
+
+
 class HashableNamespace(argparse.Namespace):
     def __init__(self, *args, **kwargs):
         hash_ignore = kwargs.pop('hash_ignore', [])
