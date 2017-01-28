@@ -4,6 +4,7 @@
 
 # built in modules
 import os
+import re
 import sys
 import time
 import json
@@ -23,6 +24,10 @@ from .hashing import hash_obj, encode_compact64
 from .stringutils import len_utf8
 from .core import is_list_or_tuple
 from .iterutils import batch_func
+
+
+def escape(text):
+    return re.sub(r'([-=&|><!\(\){}\[\]\^"~*?:\\/])', '\\\1', text)
 
 
 class ElasticsearchClientError(RuntimeError):
@@ -792,18 +797,20 @@ def batch_count(
     if field_name is None:
         field_name = es_client.field_name
 
+    if not is_list_or_tuple(field_name):
+        field_name = [field_name]
+
     # create and format queries to work with the batch apis
     queries_dsl = [
         {
             'size': 0,
             'query': {
-                'match': {
-                    field_name: {
-                        'query': term,
-                        'operator': operator
-                    }
+                'query_string': {
+                    'query': escape(term),
+                    'default_operator': operator,
+                    'fields': field_name
                 }
-            }
+            },
         }
         for term in terms
     ]
