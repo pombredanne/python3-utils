@@ -4,10 +4,8 @@ from itertools import chain
 
 # installed modules
 import numpy
-from keras.engine import Layer
 from keras.callbacks import Callback
 import keras.backend as K
-import h5py
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -24,7 +22,6 @@ class NotSoChattyLogger(Callback):
         self._total_counter = counter if counter is not None else 0
         self._start = start if start is not None else timer()
         self._metrics = {m: [] for m in (metrics if metrics else {})}
-
         super(NotSoChattyLogger, self).__init__()
 
     @property
