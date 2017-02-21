@@ -27,7 +27,7 @@ from .iterutils import batch_func
 
 
 def escape(text):
-    return re.sub(r'([-=&|><!\(\){}\[\]\^"~*?:\\/])', '\\\1', text)
+    return re.sub(r'([-=&|><!\(\){}\[\]\^"~*\+?:\\/])', '\\\1', text)
 
 
 class ElasticsearchClientError(RuntimeError):
@@ -834,6 +834,7 @@ def batch_search(
 
     # create and format queries to work with the batch apis
     # just like for simple_search, we use a multi match query
+
     queries_dsl = [
         {
             'query': {
