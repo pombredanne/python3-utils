@@ -58,7 +58,7 @@ class NotSoChattyLogger(Callback):
             print(
                 '[keras] {:,} trained in {} ({:.1e} s/example) – {}'.format(
                     self._total_counter, time_formatter(delta),
-                    self._total_counter / delta, metrics
+                    delta / self._total_counter, metrics
                 )
             )
             self._partial_counter = 0
