@@ -881,3 +881,66 @@ def msearch(queries_dsl, es_client, index_name=None, batch_size=50):
     )
 
     return resp
+
+
+def get_terms_df(terms, es_client, ref_doc=None, batch_size=200):
+    if ref_doc is None:
+        ref_doc = raw_search(
+            {'query': {'match_all': {}}}, es_client=es_client, maxsize=1
+        )[0]['_id']
+
+    queries_dsl = [
+        {
+            "query": {
+                "function_score": {
+                    "query": {"match_all": {}},
+                    "functions": [{"script_score": {"script": {
+                        "lang": "groovy",
+                        "inline": "_index['_all']['{}'].df()".format(term)
+                    }}}],
+                    "filter": {"ids": {"values": [ref_doc]}}
+                }
+            },
+            "fields": []
+        }
+        for term in terms
+    ]
+
+    dfs = [
+        int(r['hits']['hits'][0]['_score']) for r in msearch(
+            queries_dsl, es_client, batch_size=batch_size
+        )['responses']
+    ]
+
+    return dfs
+
+
+def get_terms_tf(terms, docs, es_client, batch_size=10):
+    queries_dsl = [
+        {
+            "query": {
+                "function_score": {
+                    "query": {"match_all": {}},
+                    "functions": [{"script_score": {"script": {
+                        "lang": "groovy",
+                        "inline": "_index['_all']['{}'].tf()".format(term)
+                    }}}],
+                    "filter": {"ids": {"values": docs}}
+                }
+            },
+            "fields": [],
+            "size": len(docs)
+        }
+        for term in terms
+    ]
+
+    resp = msearch(queries_dsl, es_client, batch_size=batch_size)['responses']
+
+    tfs_dict = [
+        {r['_id']: int(r['_score']) for r in results['hits']['hits']}
+        for results in resp
+    ]
+
+    tfs = [[ttfs[d] for d in docs] for ttfs in tfs_dict]
+
+    return tfs
