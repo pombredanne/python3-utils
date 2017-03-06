@@ -3,6 +3,13 @@ import time
 import traceback
 from functools import wraps
 
+try:
+    from blink1.blink1 import blink1, Blink1
+    import termcolor
+    BLINK = True
+except ImportError:
+    BLINK = False
+
 
 def ensure_version(major=None, minor=None, micro=None, releaselevel=None):
     """Raise an error if the script is not running on the required version"""
@@ -204,3 +211,58 @@ class Printer(object):
         base_space = self.base_space
         on = self.on
         return Printer(global_indent, on, base_space)
+
+
+def __alert(color, length=None, fade=0.5):
+    if length:
+
+        msg = termcolor.colored(
+            '[blink(1)] flashing {} for {} s'.format(color, length), color
+        )
+        print(msg, file=sys.stderr)
+
+        cycles = int(length // (2 * fade))
+
+        for i in range(cycles):
+            with blink1() as b1:
+                b1.fade_to_color(fade * 1000, color)
+                time.sleep(fade)
+            time.sleep(fade)
+    else:
+        with blink1() as b1:
+            b1.fade_to_color(fade * 1000, color)
+            msg = termcolor.colored((
+                '[blink(1)] flashing {}... '.format(color) +
+                'press enter to terminate.'
+            ), color)
+            print(msg, end=' ')
+            input()
+
+
+def flash_status_decorator(blink_timer=None):
+    local_blink_timer = blink_timer
+
+    def flash_status(method):
+        @wraps(method)
+        def method_wapper(*args, **kwargs):
+            if not BLINK:
+                msg = '[warning] blink and/or termcolor not installed'
+                print(msg, file=sys.stderr)
+                return method(*args, **kwargs)
+            else:
+                try:
+                    resp = method(*args, **kwargs)
+                    __alert('green', local_blink_timer)
+                    return resp
+                except Exception as e:
+                    print()
+                    traceback.print_tb(e.__traceback__)
+                    print(
+                        '{}: {}'.format(e.__class__.__name__, e),
+                        file=sys.stderr
+                    )
+                    print()
+                    __alert('red', local_blink_timer)
+                    sys.exit(1)
+        return method_wapper
+    return flash_status
