@@ -225,7 +225,7 @@ def __alert(color, length=None, fade=0.5):
 
         for i in range(cycles):
             with blink1() as b1:
-                b1.fade_to_color(fade * 1000, color)
+                b1.fade_to_color(0, color)
                 time.sleep(fade)
             time.sleep(fade)
     else:
