@@ -626,7 +626,8 @@ def retrieve_termvectors(
     if fields is not None:
         req['fields'] = ','.join(fields)
 
-    termvectors = es_client.mtermvectors(**req)['docs']
+    resp = es_client.mtermvectors(**req)
+    termvectors = resp['docs']
     return termvectors
 
 
@@ -944,3 +945,54 @@ def get_terms_tf(terms, docs, es_client, batch_size=10):
     tfs = [[ttfs[d] for d in docs] for ttfs in tfs_dict]
 
     return tfs
+
+
+def explain(
+        query_string, doc_id, es_client,
+        field_name=None, operator='or', index_name=None, doc_type=None):
+    """ Perform simple search
+
+    Args:
+        query_string (string): the query to submit to elasticseach
+        field_name (string or sequence): the field in which to search
+            query_string; if multiple fields are provided, they will get
+            combined into a boolean should query
+        operator (string): operator to use in search (can be 'and' or 'or');
+            by default, 'or' is used
+        es_client (elasticsearch.client.Elasticsearch): elasticsearch client.
+        retrieved_fields (list or None): optional list of fields to return.
+            If None, all fields are returned.
+        maxsize (int or None): maximum number of results to retrieve;
+            If None, 1000 is used.
+        index_name (string): name of the index
+
+    Returns:
+        results (list): a list of search results
+    """
+
+    if field_name is None:
+        field_name = es_client.field_name
+
+    if doc_type is None:
+        doc_type = es_client.doc_type
+
+    if index_name is None:
+        index_name = es_client.index_name
+
+    if not is_list_or_tuple(field_name):
+        field_name = [field_name]
+
+    query_dsl = {
+        'query': {
+            'query_string': {
+                'query': query_string,
+                'fields': field_name,
+                'default_operator': operator
+            }
+        },
+    }
+
+    resp = es_client.explain(
+        index=index_name, body=query_dsl, id=doc_id, doc_type=doc_type)
+
+    return resp
