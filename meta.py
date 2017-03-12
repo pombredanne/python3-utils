@@ -250,9 +250,19 @@ def flash_status_decorator(blink_timer=None):
                 print(msg, file=sys.stderr)
                 return method(*args, **kwargs)
             else:
+                start = time.time()
+
                 try:
+                    # do the actual thing
                     resp = method(*args, **kwargs)
+
+                    delta = time_formatter(time.time() - start)
+                    print(
+                        '\n[status] computation completed in {}'.format(delta),
+                        file=sys.stderr
+                    )
                     __alert('green', local_blink_timer)
+
                     return resp
                 except Exception as e:
                     print()
@@ -262,6 +272,12 @@ def flash_status_decorator(blink_timer=None):
                         file=sys.stderr
                     )
                     print()
+
+                    delta = time_formatter(time.time() - start)
+                    print(
+                        '[status] error occurred after {}'.format(delta),
+                        file=sys.stderr
+                    )
                     __alert('red', local_blink_timer)
                     sys.exit(1)
         return method_wapper
