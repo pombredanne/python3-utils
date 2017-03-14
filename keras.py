@@ -132,3 +132,70 @@ def plot_weights(model, dest_dir, layers=None):
         fig.savefig(output_fn)
         fig.clf()
 
+
+def remove_shape_check_batch_input_output(model):
+    """Remove shape check between input and output in training
+    when training the model"""
+
+    def custom_standardize_user_data(
+            x, y, sample_weight=None, class_weight=None,
+            check_batch_axis=True, batch_size=None
+    ):
+        if not hasattr(model, 'optimizer'):
+            raise RuntimeError('You must compile a model before '
+                               'training/testing. '
+                               'Use `model.compile(optimizer, loss)`.')
+
+        output_shapes = []
+        for output_shape, loss_fn in \
+                zip(model._feed_output_shapes, model._feed_loss_fns):
+            if loss_fn.__name__ == 'sparse_categorical_crossentropy':
+                output_shapes.append(output_shape[:-1] + (1,))
+            elif getattr(keras.losses, loss_fn.__name__, None) is None:
+                output_shapes.append(None)
+            else:
+                output_shapes.append(output_shape)
+
+        x = keras.engine.training._standardize_input_data(
+            x, model._feed_input_names, model._feed_input_shapes,
+            check_batch_axis=False, exception_prefix='model input'
+        )
+
+        y = keras.engine.training._standardize_input_data(
+            y, model._feed_output_names, output_shapes,
+            check_batch_axis=False, exception_prefix='model target'
+        )
+
+        sample_weights = keras.engine.training._standardize_sample_weights(
+            sample_weight, model._feed_output_names
+        )
+
+        class_weights = keras.engine.training._standardize_class_weights(
+            class_weight, model._feed_output_names
+        )
+
+        sample_weights = [
+            keras.engine.training._standardize_weights(ref, sw, cw, mode)
+            for (ref, sw, cw, mode) in zip(
+                y, sample_weights, class_weights,
+                model._feed_sample_weight_modes
+            )
+        ]
+
+        # keras.engine.training._check_array_lengths(x, y, sample_weights)
+
+        keras.engine.training._check_loss_and_target_compatibility(
+            y, model._feed_loss_fns, model._feed_output_shapes
+        )
+
+        if model.stateful and batch_size:
+            if x[0].shape[0] % batch_size != 0:
+                raise ValueError('In a stateful network, '
+                                 'you should only pass inputs with '
+                                 'a number of samples that can be '
+                                 'divided by the batch size. Found: ' +
+                                 str(x[0].shape[0]) + ' samples')
+        return x, y, sample_weights
+
+    model._standardize_user_data, model._def_standardize_user_data =\
+        custom_standardize_user_data, model._standardize_user_data
