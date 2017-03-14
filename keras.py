@@ -135,7 +135,7 @@ def plot_weights(model, dest_dir, layers=None):
 
 def remove_shape_check_batch_input_output(model):
     """Remove shape check between input and output in training
-    when training the model"""
+    when training the model. Code is adapted from https://github.com/fchollet/keras/blob/7f58b6fbe702c1936e88a878002ee6e9c469bc77/keras/engine/training.py#L1276"""
 
     def custom_standardize_user_data(
             x, y, sample_weight=None, class_weight=None,
