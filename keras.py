@@ -9,6 +9,7 @@ import keras.backend as K
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import keras
 
 # project modules
 from .meta import time_formatter, timer
