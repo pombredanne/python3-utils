@@ -22,11 +22,20 @@ class NotSoChattyLogger(Callback):
         self._total_counter = counter if counter is not None else 0
         self._start = start if start is not None else timer()
         self._metrics = {m: [] for m in (metrics if metrics else {})}
+        self._epoch = 0
         super(NotSoChattyLogger, self).__init__()
 
     @property
     def start(self):
         return self._start
+
+    @property
+    def epoch(self):
+        return self._epoch
+
+    @epoch.setter
+    def epoch(self, epoch):
+        self._epoch = epoch
 
     def __getitem__(self, item):
         return self._metrics[item]
@@ -56,8 +65,9 @@ class NotSoChattyLogger(Callback):
             )
 
             print(
-                '[keras] {:,} trained in {} ({:.1e} s/example) – {}'.format(
-                    self._total_counter, time_formatter(delta),
+                '[keras] epoch {}: {:,} trained in {} ({:.1e} s/example) – {}'
+                ''.format(
+                    self.epoch, self._total_counter, time_formatter(delta),
                     delta / self._total_counter, metrics
                 )
             )
@@ -131,3 +141,4 @@ def plot_weights(model, dest_dir, layers=None):
         )
         fig.savefig(output_fn)
         fig.clf()
+

@@ -2,3 +2,5 @@ numpy
 scipy
 elasticsearch
 termcolor
+blink1
+keras
