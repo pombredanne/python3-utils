@@ -1,5 +1,6 @@
 import sys
 import time
+import datetime
 import traceback
 from functools import wraps
 
@@ -105,6 +106,10 @@ def time_formatter(seconds):
         )
     else:
         return '{:.3f} s'.format(seconds)
+
+
+def iso_timestamp():
+    return datetime.datetime.now().isoformat()
 
 
 def timer(func=None, printer=None, comment=None, inf_prec=False):
