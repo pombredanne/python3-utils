@@ -60,7 +60,7 @@ def compact_hash_obj(obj, ignore_unhashable=False):
 
 
 def hash_obj(obj, ignore_unhashable=False):
-    '''Returns hash for object obj'''
+    """Returns hash for object obj"""
     if isinstance(obj, numbers.Number):
         obj = str(obj)
 
