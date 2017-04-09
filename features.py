@@ -87,11 +87,19 @@ def get_collections_term_odds(
     return odds
 
 
-def get_one_hot_encoding(data, dtpye=float):
-    values_map = {k: p for p, k in enumerate(sorted(set(deep_iterate(data))))}
-    m = np.zeros(shape=(len(data), len(values_map)), dtype=float)
+def get_one_hot_encoding(data, dtype=float, valid_symbols=None):
+
+    if valid_symbols is None:
+        valid_symbols = set(deep_iterate(data))
+
+    values_map = {k: p for p, k in enumerate(sorted(valid_symbols))}
+
+    m = np.zeros(shape=(len(data), len(values_map)), dtype=dtype)
 
     for val, pos in deep_iterate(data, yield_pos=True):
+        if val not in values_map:
+            continue
+
         # we ignore the last coordinate
         *part_pos, _ = pos
         new_pos = tuple(part_pos) + (values_map[val], )
