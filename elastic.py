@@ -43,6 +43,10 @@ class EsClient(elasticsearch.Elasticsearch):
 
     def __init__(self, *args, **kwargs):
 
+        # timeout does nothing, should be request_timeout
+        if kwargs.get('timeout', None):
+            kwargs['request_timeout'] = kwargs['timeout']
+
         self.signature = hash_obj([args, kwargs])
 
         self.cache = kwargs.pop('cache', None)
@@ -426,12 +430,12 @@ def stats(es_client, index_name=None):
 
     resp = es_client.indices.stats(index=index_name)
 
-    stats = {
+    statistics = {
         'count': resp['_all']['primaries']['docs']['count'],
         'size': resp['_all']['primaries']['store']['size_in_bytes']
     }
 
-    return stats
+    return statistics
 
 
 def simple_search(
@@ -897,7 +901,8 @@ def get_terms_df(terms, es_client, ref_doc=None, batch_size=200):
                     "query": {"match_all": {}},
                     "functions": [{"script_score": {"script": {
                         "lang": "groovy",
-                        "inline": "_index['_all']['{}'].df()".format(term)
+                        "inline": "_index['_all']['{}'].df()".format(
+                            term.replace("'", "\\\'"))
                     }}}],
                     "filter": {"ids": {"values": [ref_doc]}}
                 }
@@ -907,10 +912,9 @@ def get_terms_df(terms, es_client, ref_doc=None, batch_size=200):
         for term in terms
     ]
 
+    resp = msearch(queries_dsl, es_client, batch_size=batch_size)
     dfs = [
-        int(r['hits']['hits'][0]['_score']) for r in msearch(
-            queries_dsl, es_client, batch_size=batch_size
-        )['responses']
+        int(r['hits']['hits'][0]['_score']) for r in resp['responses']
     ]
 
     return dfs
