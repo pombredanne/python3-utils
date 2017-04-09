@@ -3,7 +3,7 @@ import random
 import itertools
 import copy
 import platform
-import heapq
+from collections.abc import Iterable
 
 
 def is_windows():
@@ -14,6 +14,17 @@ def getset(s):
     """Returns an element from a set"""
     for x in s:
         return x
+
+
+def deep_iterate(li, pos=tuple(), yield_pos=False):
+    """Iterate over all elements of Iterable li"""
+    for j, elem in enumerate(li):
+        if isinstance(elem, Iterable) and not isinstance(elem, str):
+            yield from deep_iterate(
+                elem, pos=(pos + (j, )), yield_pos=yield_pos
+            )
+        else:
+            yield (elem, pos + (j, )) if yield_pos else elem
 
 
 def interleave_lists(lst_a, lst_b, prob_a=None, seed=None):
