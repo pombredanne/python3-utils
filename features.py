@@ -5,6 +5,7 @@ import numpy as np
 
 # project modules
 from . import elastic
+from .core import deep_iterate
 
 
 def get_colleciton_idf(terms, index_name, doc_type, field_name, cache=None):
@@ -84,3 +85,16 @@ def get_collections_term_odds(
     odds = [cache[t] for t in terms]
 
     return odds
+
+
+def get_one_hot_encoding(data, dtpye=float):
+    values_map = {k: p for p, k in enumerate(sorted(set(deep_iterate(data))))}
+    m = np.zeros(shape=(len(data), len(values_map)), dtype=float)
+
+    for val, pos in deep_iterate(data, yield_pos=True):
+        # we ignore the last coordinate
+        *part_pos, _ = pos
+        new_pos = tuple(part_pos) + (values_map[val], )
+        m[new_pos] = 1.
+
+    return m
