@@ -106,3 +106,60 @@ def get_one_hot_encoding(data, dtype=float, valid_symbols=None):
         m[new_pos] = 1.
 
     return m
+
+
+def terms_relevant_odds(
+        qid, terms, index1_name, index2_name, doc_type, year,
+):
+    es_all = elastic.get_client(
+        index_name=index1_name, doc_type=doc_type,
+        timeout=120, field_name='_all'
+    )
+
+    cnt_terms_all = elastic.batch_count(terms, es_client=es_all)
+    size_all = elastic.stats(es_all)['count']
+    prob_all = [c / size_all for c in cnt_terms_all]
+
+    es_rel = elastic.get_client(
+        index_name=index2_name, doc_type=doc_type,
+        timeout=120, field_name='_all'
+    )
+    all_rel_query = {
+        'query': {
+            'bool': {
+                'must': {
+                    'term': {'rel': '{}.{}'.format(year, qid)}
+                }
+            }
+        }
+    }
+    size_rel = elastic.raw_count(query_dsl=all_rel_query, es_client=es_rel)
+
+    term_counts_dsl = [
+        {
+            'size': 0,
+            'query': {
+                'bool': {
+                    'must': {'term': {'_all': term}},
+                    'filter': {'term': {'rel': '{}.{}'.format(year, qid)}}
+                }
+            }
+        }
+        for term in sorted(terms)
+    ]
+
+    terms_rel = [
+        r['hits']['total']
+        for r in elastic.msearch(
+            queries_dsl=term_counts_dsl, es_client=es_rel, batch_size=500
+        )['responses']
+    ]
+
+    prob_rel = [c / size_rel for c in terms_rel]
+
+    odds = [
+        np.log2((r / (a + 10e-9)) + 1.0)
+        for r, a in zip(prob_rel, prob_all)
+    ]
+
+    return odds
