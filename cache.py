@@ -8,14 +8,10 @@ import gzip
 import json
 import pickle
 import string
-import inspect
 import functools
 
 # installed modules
 import numpy
-
-# project modules
-from .hashing import hash_obj
 
 
 class CacheError(RuntimeError):
@@ -25,7 +21,7 @@ class CacheError(RuntimeError):
         super(CacheError, self).__init__(*args, **kwargs)
 
 
-class Writers(object):
+class Writers:
     @staticmethod
     def json(data, filepath, io_handler):
         """Writes data to filepath using io_handler in json format"""
@@ -80,7 +76,7 @@ def _choose_writer(extension, compression):
     return writer, io_hadler
 
 
-class Readers(object):
+class Readers:
     @staticmethod
     def json(filepath, io_handler):
         """Loads data in json format from filepath using io_handler"""
@@ -122,16 +118,14 @@ def _choose_reader(extension, compression):
 
 
 def simple_caching(
-        cachedir=None, include_args=False, cache_comment=None,
-        invalidate=False, cache_format='json', cache_compression=True,
-        callback_func_hit=None, callback_func_miss=None,
-        quiet=False, no_caching=False, cache_name=None, cache_ext=None):
+        cachedir=None, cache_comment=None, invalidate=False,
+        cache_format='json', cache_compression=True, callback_func_hit=None,
+        callback_func_miss=None, quiet=False, no_caching=False,
+        cache_name=None, cache_ext=None
+):
     """ Caching decorator
 
     Args:
-        include_args (bool, default=False): determine whether
-            arguments passed to the function should be included as
-            cache comment
         cachedir (str, default=None): location of the folder where to cache.
             cachedir doesn't need to be configured if simple_caching is
             caching a method of a class with cachedir attribute.
@@ -183,7 +177,6 @@ def simple_caching(
         local_cachedir = cachedir
         local_cache_comment = (cache_comment or '')
         local_invalidate = invalidate
-        local_include_args = include_args
         local_quiet = quiet
         local_no_caching = no_caching
         local_cache_name = cache_name
@@ -195,15 +188,6 @@ def simple_caching(
         # the identity function
         local_callback_func_miss = (callback_func_miss or (lambda e: e))
         local_callback_func_hit = (callback_func_hit or (lambda e: e))
-
-        # collect the deafault parameters for the method.
-        # if include_args is true, this values are used if kwargs
-        # are not provided
-        method_params = inspect.signature(method).parameters
-        default_params = {
-            k: v.default for k, v in method_params.items()
-            if v.default != inspect._empty
-        }
 
         @functools.wraps(method)
         def method_wrapper(*args, **kwargs):
@@ -232,7 +216,6 @@ def simple_caching(
             # values @ call time or if some of the missing parameters
             # have been provided at call time
             inner_invalidate = kwargs.pop('invalidate', local_invalidate)
-            inner_include_args = kwargs.pop('include_args', local_include_args)
             inner_no_caching = kwargs.pop('no_caching', local_no_caching)
             inner_cache_name = kwargs.pop('cache_name', local_cache_name)
             inner_cache_comment = kwargs.pop(
@@ -298,20 +281,11 @@ def simple_caching(
                 if inner_cache_name is None else inner_cache_name
             )
 
-            if inner_include_args:
-                # include default values to kwargs!
-                kwargs_with_default = {**default_params, **kwargs}
-                to_hash = hash_obj([args, kwargs_with_default])
-                args_comment = ('_0{}'.format(to_hash) if to_hash > 0
-                                else '_1{}'.format(to_hash * -1))
-            else:
-                # makes sure that there is an underscore
-                # between cache file name and cache comment
-                args_comment = ''
-
-            cachename = '{}{}{}.cache.{}{}'.format(
-                name, args_comment, inner_cache_comment,
-                inner_cache_format, '.gzip' if inner_cache_compression else ''
+            cachename = '{}{}.cache.{}{}'.format(
+                name,
+                inner_cache_comment,
+                inner_cache_format,
+                '.gzip' if inner_cache_compression else ''
             )
             cachepath = os.path.join(inner_cachedir, cachename)
 
