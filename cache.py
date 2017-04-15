@@ -172,8 +172,8 @@ def simple_caching(
 
             foo('baz', cachedir='/path/to/cache')
 
-        A combination of both is also fine, of course.
-        kwargs provided at call time have precedence, though.
+        A combination of both is also fine, of course; kwargs provided 
+        at call time have precedence, though.
     """
 
     def caching_decorator(method):
@@ -282,7 +282,7 @@ def simple_caching(
             #
             # Note that, because getattr returns None if no match is
             # found, we can't call `.group` directly on its output bacause
-            # it might not ve a `_sre.SRE_Match` object; therefore, we
+            # it might not be a `_sre.SRE_Match` object; therefore, we
             # use a mock lambda function that always return None
             inner_cache_format = (
                 kwargs.pop('cache_format', local_cache_format)
