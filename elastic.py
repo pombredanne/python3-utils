@@ -276,7 +276,7 @@ def tokenize(
 
     Args:
         string (string): the string to tokenize
-        es_client (elasticsearch.client.Elasticsearch): elasticsearch client.
+        es_client (EsClient): elasticsearch client.
         field_name (string): the field whose analyzer is used to
             tokenize
         index_name (string): name of the index
@@ -315,7 +315,7 @@ def phrase_search(
 
     Args:
         query_string (string): the query to submit to elasticseach
-        es_client (elasticsearch.client.Elasticsearch): elasticsearch client.
+        es_client (EsClient): elasticsearch client.
         field_name (string): the field in which to search query_string
         slop (int): maximum distance between non-consecutive terms in the
             query; by default, no distance is allowed (all terms must be
@@ -373,7 +373,7 @@ def phrase_count(
 
     Args:
         query_string (string): the query to submit to elasticseach
-        es_client (elasticsearch.client.Elasticsearch): elasticsearch client.
+        es_client (EsClient): elasticsearch client.
         field_name (string): the field in which to search query_string
         slop (int): maximum distance between non-consecutive terms in the
             query; by default, no distance is allowed (all terms must be
@@ -419,7 +419,7 @@ def phrase_count(
 def stats(es_client, index_name=None):
     """Returns count of documents and size in bytes on an index
     Args:
-        es_client (elasticsearch.client.Elasticsearch): elasticsearch client.
+        es_client (EsClient): elasticsearch client.
         index_name (string): name of the index
 
     Returns:
@@ -450,7 +450,7 @@ def simple_search(
             combined into a boolean should query
         operator (string): operator to use in search (can be 'and' or 'or');
             by default, 'or' is used
-        es_client (elasticsearch.client.Elasticsearch): elasticsearch client.
+        es_client (EsClient): elasticsearch client.
         retrieved_fields (list or None): optional list of fields to return.
             If None, all fields are returned.
         maxsize (int or None): maximum number of results to retrieve;
@@ -463,6 +463,9 @@ def simple_search(
 
     if field_name is None:
         field_name = es_client.field_name
+
+    if index_name is None:
+        index_name = es_client.index_name
 
     if not is_list_or_tuple(field_name):
         field_name = [field_name]
@@ -481,7 +484,8 @@ def simple_search(
         query_dsl['fields'] = retrieved_fields
 
     results = raw_search(
-        query_dsl=query_dsl, es_client=es_client, maxsize=maxsize
+        query_dsl=query_dsl, es_client=es_client,
+        maxsize=maxsize, index_name=index_name
     )
 
     return results
@@ -489,12 +493,12 @@ def simple_search(
 
 def raw_search(
         query_dsl, es_client, maxsize=None, index_name=None, offset=None,
-        invalidate=True):
+):
     """Subroutine to perform search
 
     Args:
         query_dsl (dict): the query in Query DSL language
-        es_client (elasticsearch.client.Elasticsearch): elasticsearch client.
+        es_client (EsClient): elasticsearch client.
         maxsize (int or None): maximum number of results to retrieve;
             If None, 1000 is used.
         index_name (string): name of the index to use.
@@ -524,7 +528,7 @@ def count(query, es_client, operator='or', field_name=None, index_name=None):
 
     Args:
         query (str): search string
-        es_client (elasticsearch.client.Elasticsearch): elasticsearch client.
+        es_client (EsClient): elasticsearch client.
         operator (string): operator to use in query. Can be "or" or "and".
         index_name (string): name of the index to use.
         field_name (string): name of the field to match in search
@@ -641,7 +645,7 @@ def retrieve_documents(
 
     Args:
         documents_ids (list): list of identifiers of documents
-        es_client (elasticsearch.client.Elasticsearch): elasticsearch client.
+        es_client (EsClient): elasticsearch client.
         index_name (string): name of the index to use; if no index name
             is provided, the name in opts.index_name is used.
         doc_type (string): type of document to retrieve; if none is provided,
@@ -676,7 +680,7 @@ def index_in_bulk(
     Args:
         documents (dict or iterable): dictionary of <doc_id:content> or
             iterable returning tuples (doc_id, content)
-        es_client (elasticsearch.client.Elasticsearch): elasticsearch client.
+        es_client (EsClient): elasticsearch client.
         index_name (str): name of the index; if none is provided,
             index_in_bulk will attempt at using es_client.index_name instead.
         bulk_size_in_bytes (int): size of each operation in bytes. This
@@ -963,7 +967,7 @@ def explain(
             combined into a boolean should query
         operator (string): operator to use in search (can be 'and' or 'or');
             by default, 'or' is used
-        es_client (elasticsearch.client.Elasticsearch): elasticsearch client.
+        es_client (EsClient): elasticsearch client.
         retrieved_fields (list or None): optional list of fields to return.
             If None, all fields are returned.
         maxsize (int or None): maximum number of results to retrieve;
