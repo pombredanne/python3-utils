@@ -75,6 +75,11 @@ def slice_list(lst, slice_size, func_while_slicing=None):
     yield current_slice
 
 
+def apply(func, iterable):
+    """Equivalent to map Python 2-style"""
+    return [func(elem) for elem in iterable]
+
+
 def is_list_or_tuple(obj):
     """Returns True if obj is a list or a tuple"""
     return (
