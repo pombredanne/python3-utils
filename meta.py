@@ -219,29 +219,33 @@ class Printer(object):
 
 
 def __alert(color, length=None, fade=0.5):
-    if length:
+    try:
+        if length:
 
-        msg = termcolor.colored(
-            '[blink(1)] flashing {} for {} s'.format(color, length), color
-        )
-        print(msg, file=sys.stderr)
+            msg = termcolor.colored(
+                '[blink(1)] flashing {} for {} s'.format(color, length), color
+            )
+            print(msg, file=sys.stderr)
 
-        cycles = int(length // (2 * fade))
+            cycles = int(length // (2 * fade))
 
-        for i in range(cycles):
-            with blink1() as b1:
-                b1.fade_to_color(0, color)
+            for i in range(cycles):
+                with blink1() as b1:
+                    b1.fade_to_color(0, color)
+                    time.sleep(fade)
                 time.sleep(fade)
-            time.sleep(fade)
-    else:
+        else:
+            with blink1() as b1:
+                b1.fade_to_color(fade * 1000, color)
+                msg = termcolor.colored((
+                    '[blink(1)] flashing {}... '.format(color) +
+                    'press enter to terminate.'
+                ), color)
+                print(msg, end=' ')
+                input()
+    except KeyboardInterrupt:
         with blink1() as b1:
-            b1.fade_to_color(fade * 1000, color)
-            msg = termcolor.colored((
-                '[blink(1)] flashing {}... '.format(color) +
-                'press enter to terminate.'
-            ), color)
-            print(msg, end=' ')
-            input()
+            b1.fade_to_color(0, color)
 
 
 def flash_status_decorator(blink_timer=None):
