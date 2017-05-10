@@ -724,7 +724,7 @@ def index_in_bulk(
                 'create': {
                     '_index': index_name,
                     '_type': doc.pop('_type'),
-                    '_id': doc.pop('_id')
+                    '_id': doc.pop('_id') if '_id' in doc else None
                 }
             },
             doc
